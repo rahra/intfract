@@ -2,7 +2,7 @@
 #include <cairo.h>
 
 #define MAXITERATE 40
-#define NORM_BITS (13)
+#define NORM_BITS 13
 #define NORM_FACT ((nint_t)1 << NORM_BITS)
 
 
