@@ -96,9 +96,9 @@ VOID get_3d_apfel(cairo_surface_t *awin, struct MandCoord *apf_coord, short HRES
 
 int main(int argc, char **argv)
 {
-   struct MandCoord myco = {{-2.5, -1.5}, {1, 1.5}};
+   struct MandCoord myco = {{-2.0, -1.2}, {0.7, 1.2}};
    //struct MandCoord myco = {{0.435396403, 0.367981352}, {0.451687191, 0.380210061}};
-   int width = 400, height = 300;
+   int width = 640, height = 480;
    cairo_surface_t *sfc;
 
    sfc = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
