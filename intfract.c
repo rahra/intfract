@@ -20,6 +20,9 @@
  * also wrote an assembler version which contain some additional speed
  * improvements.
  *
+ * Compile this program with
+ * gcc -Wall -O2 -std=c99 `pkg-config --cflags --libs cairo` -o intfract intfract.c
+ *
  * @author Bernhard R. Fischer
  * @version 2015/10/11 (this version)
  */
