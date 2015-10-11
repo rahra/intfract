@@ -1,14 +1,16 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <cairo.h>
 
-#define MAXITERATE 40
+#define MAXITERATE 64
 
 //#define USE_DOUBLE
 #ifdef USE_DOUBLE
 #define NORM_FACT 1
 typedef double nint_t;
 #else
-#define NORM_BITS 13
+#define NORM_BITS 24
 #define NORM_FACT ((nint_t)1 << NORM_BITS)
 typedef long nint_t;
 #endif
@@ -81,6 +83,14 @@ void mand_calc(int *image, nint_t realmin, nint_t imagmin, nint_t realmax, nint_
 }
 
 
+int fract_color(int itcnt)
+{
+   //return itcnt >= MAXITERATE ? 0 : itcnt * (256 / MAXITERATE) << 17;
+   //return itcnt >= MAXITERATE ? 0 : (itcnt * (256 / MAXITERATE) << 1) | ((256 + itcnt * (256 / MAXITERATE)) << 10);
+   return itcnt >= MAXITERATE ? 0 : (itcnt * (256 / MAXITERATE) << 17) | ((256 + itcnt * (256 / MAXITERATE)) << 10);
+}
+
+
 void cairo_save_image(const int *image, int hres, int vres)
 {
    cairo_surface_t *sfc;
@@ -95,7 +105,8 @@ void cairo_save_image(const int *image, int hres, int vres)
 
    for (y = 0; y < vres; y++, pdata += stride)
       for (x = 0; x < hres; x++, image++)
-         *((int*) pdata + x) = *image >= MAXITERATE ? 0 : *image * 6 << 9;
+         // translate iteration counter into pixel color
+         *((int*) pdata + x) = fract_color(*image);
 
    cairo_surface_mark_dirty(sfc);
    cairo_surface_write_to_png(sfc, "berge.png");
@@ -106,8 +117,16 @@ void cairo_save_image(const int *image, int hres, int vres)
 int main(int argc, char **argv)
 {
    double bbox[] = {-2.0, -1.2, 0.7, 1.2};   // realmin, imagmin, realmax, imagmax
+   //double bbox[] = {-1.75, -0.06, -1.77, -0.08};   // realmin, imagmin, realmax, imagmax
    int width = 800, height = 600;            // pixel resolution
    int image[width * height];                // raw pixel data
+
+   if (argc >= 2 && !strcmp(argv[1], "-h"))
+      printf("usage: %s [realmin imagmin realmax imagmax]\n", argv[0]), exit(0);
+
+   if (argc >= 5)
+      for (int i = 0; i < 4; i++)
+         bbox[i] = atof(argv[i + 1]);
 
    mand_calc(image,
          bbox[0] * NORM_FACT, bbox[1] * NORM_FACT, bbox[2] * NORM_FACT, bbox[3] * NORM_FACT,
