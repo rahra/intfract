@@ -142,11 +142,13 @@ void mand_calc(int *image, nint_t realmin, nint_t imagmin, nint_t realmax, nint_
 int fract_color(unsigned int itcnt)
 {
    // red color set
-   return itcnt >= MAXITERATE ? 0 : itcnt * (256 / MAXITERATE) << 17;
+   //return itcnt >= MAXITERATE ? 0 : itcnt * (256 / MAXITERATE) << 17;
    // green and blue color set
    //return itcnt >= MAXITERATE ? 0 : (itcnt * (256 / MAXITERATE) << 1) | ((256 + itcnt * (256 / MAXITERATE)) << 10);
    // read and yellow color set
    //return itcnt >= MAXITERATE ? 0 : (itcnt * (256 / MAXITERATE) << 17) | ((256 + itcnt * (256 / MAXITERATE)) << 10);
+   // black white color set
+   return (itcnt & 1) * 0xffffff;
 }
 
 
@@ -181,7 +183,7 @@ void cairo_save_image(const int *image, int hres, int vres)
 int main(int argc, char **argv)
 {
    double bbox[] = {-2.0, -1.2, 0.7, 1.2};   // realmin, imagmin, realmax, imagmax
-   int width = 800, height = 600;            // pixel resolution
+   int width = 600, height = 400;            // pixel resolution
    int image[width * height];                // raw pixel data
 
    // parse command line arguments
