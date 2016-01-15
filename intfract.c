@@ -31,20 +31,7 @@
 #include <string.h>
 #include <cairo.h>
 
-// maximum number of iterations of the inner loop
-#define MAXITERATE 64
-
-// Define to use double (floating point operations), otherwise integer
-// arithmetics is used.
-//#define USE_DOUBLE
-#ifdef USE_DOUBLE
-#define NORM_FACT 1
-typedef double nint_t;
-#else
-#define NORM_BITS 13
-#define NORM_FACT ((nint_t)1 << NORM_BITS)
-typedef long nint_t;
-#endif
+#include "intfract.h"
 
 
 #ifdef USE_DOUBLE
@@ -74,6 +61,7 @@ int iterate(nint_t real0, nint_t imag0)
    return i;
 }
 #else
+#ifndef ASM_ITERATE
 /*! This function contains the iteration loop using integer arithmetics.
  * @param real0 Real coordinate of pixel within the complex plane.
  * @param imag0 Imaginary coordinate of the pixel.
@@ -99,6 +87,7 @@ int iterate(nint_t real0, nint_t imag0)
    }
    return i;
 }
+#endif
 #endif
 
 
@@ -146,9 +135,9 @@ int fract_color(unsigned int itcnt)
    // green and blue color set
    //return itcnt >= MAXITERATE ? 0 : (itcnt * (256 / MAXITERATE) << 1) | ((256 + itcnt * (256 / MAXITERATE)) << 10);
    // read and yellow color set
-   //return itcnt >= MAXITERATE ? 0 : (itcnt * (256 / MAXITERATE) << 17) | ((256 + itcnt * (256 / MAXITERATE)) << 10);
+   return itcnt >= MAXITERATE ? 0 : (itcnt * (256 / MAXITERATE) << 17) | ((256 + itcnt * (256 / MAXITERATE)) << 10);
    // black white color set
-   return (itcnt & 1) * 0xffffff;
+   //return (itcnt & 1) * 0xffffff;
 }
 
 
@@ -175,7 +164,7 @@ void cairo_save_image(const int *image, int hres, int vres)
          *((int*) pdata + x) = fract_color(*image);
 
    cairo_surface_mark_dirty(sfc);
-   cairo_surface_write_to_png(sfc, "berge.png");
+   cairo_surface_write_to_png(sfc, "intfract.png");
    cairo_surface_destroy(sfc);
 }
 
