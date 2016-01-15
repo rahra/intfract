@@ -2,6 +2,8 @@
  * The file contains two variants. First, define the cpp macro CONSERVATIVE to
  * activate a traditional solution using stack variables. The second solution
  * (undefine CONSERVATIVE) shows a faster register-only implementation.
+ * This code was written for demonstrational purpose in lecture for Assembler
+ * programming and reverse engineering.
  *
  * @author Bernhard R. Fischer
  * @version 2016/01/14
