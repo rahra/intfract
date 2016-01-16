@@ -15,15 +15,22 @@
  * along with IntFract. If not, see <http://www.gnu.org/licenses/>.
  */
 
+/* \file intfract.h
+ * This file contains some definitions.
+ */
+
 // define to compile with assembler iterate() function
 #define ASM_ITERATE
-
-// maximum number of iterations of the inner loop
-#define MAXITERATE 64
 
 // Define to use double (floating point operations), otherwise integer
 // arithmetics is used.
 //#define USE_DOUBLE
+
+// maximum number of iterations of the inner loop
+#define MAXITERATE 64
+
+
+#define IT8(x) ((x) * 255 / MAXITERATE)
 
 #ifdef USE_DOUBLE
 #ifndef __ASSEMBLER__
