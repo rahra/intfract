@@ -24,7 +24,7 @@
 
 
    .section .text
-   .align 8
+   .align 16
 
 /* function prototype:
  * int iterate(int real0, int imag0);
@@ -114,7 +114,8 @@ iterate:
    mov   %rsi,%r9             // imag = imag0
 
    mov   $MAXITERATE,%ecx     // i = 64
-
+   jmp   .Litloop
+   .align 16
 .Litloop:
 
    mov   %r8,%r10
