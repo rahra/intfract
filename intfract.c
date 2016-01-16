@@ -30,65 +30,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <cairo.h>
+#ifdef WITH_TIME
+#include <sys/time.h>
+#endif
 
 #include "intfract.h"
-
-
-#ifdef USE_DOUBLE
-/*! This function contains the iteration loop using integer arithmetics.
- * @param real0 Real coordinate of pixel within the complex plane.
- * @param imag0 Imaginary coordinate of the pixel.
- * @return Returns the number of iterations to reach the break condition.
- */
-int iterate(nint_t real0, nint_t imag0)
-{
-   nint_t realq, imagq, real, imag;
-   int i;
-
-   real = real0;
-   imag = imag0;
-   for (i = 0; i < MAXITERATE; i++)
-   {
-     realq = real * real;
-     imagq = imag * imag;
-
-     if ((realq + imagq) > (nint_t) 4)
-        break;
-
-     imag = real * imag * 2 + imag0;
-     real = realq - imagq + real0;
-   }
-   return i;
-}
-#else
-#ifndef ASM_ITERATE
-/*! This function contains the iteration loop using integer arithmetics.
- * @param real0 Real coordinate of pixel within the complex plane.
- * @param imag0 Imaginary coordinate of the pixel.
- * @return Returns the number of iterations to reach the break condition.
- */
-int iterate(nint_t real0, nint_t imag0)
-{
-   nint_t realq, imagq, real, imag;
-   int i;
-
-   real = real0;
-   imag = imag0;
-   for (i = 0; i < MAXITERATE; i++)
-   {
-     realq = (real * real) >> NORM_BITS;
-     imagq = (imag * imag) >> NORM_BITS;
-
-     if ((realq + imagq) > (nint_t) 4 * NORM_FACT)
-        break;
-
-     imag = ((real * imag) >> (NORM_BITS - 1)) + imag0;
-     real = realq - imagq + real0;
-   }
-   return i;
-}
-#endif
-#endif
 
 
 /*! This function contains the outer loop, i.e. calculate the coordinates
@@ -131,11 +77,11 @@ void mand_calc(int *image, nint_t realmin, nint_t imagmin, nint_t realmax, nint_
 int fract_color(unsigned int itcnt)
 {
    // red color set
-   //return itcnt >= MAXITERATE ? 0 : itcnt * (256 / MAXITERATE) << 17;
+   //return itcnt >= MAXITERATE ? 0 : IT8(itcnt) << 17;
    // green and blue color set
-   //return itcnt >= MAXITERATE ? 0 : (itcnt * (256 / MAXITERATE) << 1) | ((256 + itcnt * (256 / MAXITERATE)) << 10);
+   //return itcnt >= MAXITERATE ? 0 : (IT8(itcnt) << 1) | ((256 + IT8(itcnt)) << 10);
    // read and yellow color set
-   return itcnt >= MAXITERATE ? 0 : (itcnt * (256 / MAXITERATE) << 17) | ((256 + itcnt * (256 / MAXITERATE)) << 10);
+   return itcnt >= MAXITERATE ? 0 : (IT8(itcnt) << 17) | ((256 + IT8(itcnt)) << 10);
    // black white color set
    //return (itcnt & 1) * 0xffffff;
 }
@@ -182,10 +128,21 @@ int main(int argc, char **argv)
       for (int i = 0; i < 4; i++)
          bbox[i] = atof(argv[i + 1]);
 
+#ifdef WITH_TIME
+   struct timeval tv0, tv1, tv;
+   gettimeofday(&tv0, NULL);
+#endif
+
    // call calculation of image
    mand_calc(image,
          bbox[0] * NORM_FACT, bbox[1] * NORM_FACT, bbox[2] * NORM_FACT, bbox[3] * NORM_FACT,
          width, height);
+
+#ifdef WITH_TIME
+   gettimeofday(&tv1, NULL);
+   timersub(&tv1, &tv0, &tv);
+   printf("%ld.%06ld\n", tv.tv_sec, tv.tv_usec);
+#endif
 
    // save image to disk
    cairo_save_image(image, width, height);
