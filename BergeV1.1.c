@@ -1,3 +1,7 @@
+/*! This program calculates the well-known Mandelbrot image. This is the
+ * original code written on an Amiga 500 somewhere around 1990.
+ * @author Bernhard R. Fischer
+ */
 #include <exec/types.h>
 #include <intuition/intuition.h>
 #include <graphics/gfx.h>
