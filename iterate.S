@@ -125,20 +125,19 @@ iterate:
    imul  %r11,%r11            // imagq = imag * imag
    sar   $NORM_BITS,%r11      // imagq >>= 13
 
-   mov   %r11,%rax
-   add   %r10,%rax            // realq + imagq
+   lea   (%r10,%r11),%rax
    cmp   %rdx,%rax            // > 4 * NORM_FACT ?
    jg    .Litbrk
 
-   imul  %r8,%r9              // imag += real
+   imul  %r8,%r9              // imag *= real
    sar   $(NORM_BITS - 1),%r9 // imag >>= NORM_BITS - 1
    add   %rsi,%r9             // imag += imag0
 
    sub   %r11,%r10            // realq - imagq
-   mov   %r10,%r8
-   add   %rdi,%r8             // real += real0
+   lea   (%rdi,%r10),%r8
    
-   loop  .Litloop             // i--
+   dec   %ecx
+   jne   .Litloop
 
 .Litbrk:
 
