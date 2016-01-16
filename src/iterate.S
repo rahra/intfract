@@ -12,6 +12,7 @@
 #include "intfract.h"
 
 #ifdef ASM_ITERATE
+#ifndef USE_DOUBLE
 
 // Define to use conservative stack-variable-solution.
 //#define CONSERVATIVE
@@ -148,7 +149,9 @@ iterate:
 
    ret
 
-#endif
+#endif // !CONSERVATIVE
+
+#endif // !USE_DOUBLE
 
 #endif // ASM_ITERATE
 

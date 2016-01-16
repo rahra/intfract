@@ -42,11 +42,14 @@ typedef double nint_t;
 #define NORM_FACT (1 << NORM_BITS)
 #else
 typedef long nint_t;
-// prototype for iterate()
-int iterate(nint_t real0, nint_t imag0);
 #define NORM_FACT ((nint_t)1 << NORM_BITS)
 #endif
 #define NORM_BITS 13
+#endif
+
+#ifndef __ASSEMBLER__
+// prototype for iterate()
+int iterate(nint_t real0, nint_t imag0);
 #endif
 
 #endif
