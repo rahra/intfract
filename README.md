@@ -17,7 +17,7 @@ This package contains several implementations:
 * `iterate.S` is an implementation done in Intel x86_64 assembler. It contains a traditional implementation using stack variables (`#define CONSERVATIVE`) and a high performance implementation.
 
 Read my article [»Fractals And Intel x86_64
-Assembler«](https://www.cypherpunk.at/2016/01/fractals-and-int…x86_64-assembler/)
+Assembler«](https://www.cypherpunk.at/2016/01/fractals-and-intel-x86_64-assembler/)
 for implementation details of the assembler variant.
 
 This package also contains the original variants in C and 68000 assembler
