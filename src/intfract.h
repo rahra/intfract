@@ -19,12 +19,18 @@
  * This file contains some definitions.
  */
 
+#ifdef WITH_THREADS
+#include <pthread.h>
+#define MAX_THREADS 32
+#define NUM_THREADS 4
+#endif
+
 // define to compile with assembler iterate() function
 #define ASM_ITERATE
 
 // Define to use double (floating point operations), otherwise integer
 // arithmetics is used.
-//#define USE_DOUBLE
+#define USE_DOUBLE
 
 // maximum number of iterations of the inner loop
 #define MAXITERATE 64

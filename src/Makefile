@@ -1,9 +1,9 @@
 CC = gcc
 CAIRO_CFLAGS = $(shell pkg-config --cflags cairo)
 CAIRO_LDFLAGS = $(shell pkg-config --libs cairo)
-CFLAGS = -O2 -g -Wall -std=gnu99 -DWITH_TIME $(CAIRO_CFLAGS)
+CFLAGS = -O2 -g -Wall -std=gnu99 -DWITH_TIME $(CAIRO_CFLAGS) -DWITH_THREADS
 ASFLAGS =
-LDFLAGS = -lm $(CAIRO_LDFLAGS)
+LDFLAGS = -lm $(CAIRO_LDFLAGS) -lpthread
 
 all: intfract
 

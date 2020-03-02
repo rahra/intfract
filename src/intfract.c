@@ -33,6 +33,10 @@
 #ifdef WITH_TIME
 #include <sys/time.h>
 #endif
+#ifdef WITH_THREADS
+#include <stdint.h>
+#include <pthread.h>
+#endif
 
 #include "intfract.h"
 
@@ -47,7 +51,7 @@
  * @param hres Pixel width of image.
  * @param vres Pixel height of image.
  */
-void mand_calc(int *image, nint_t realmin, nint_t imagmin, nint_t realmax, nint_t imagmax, int hres, int vres)
+void mand_calc(int *image, nint_t realmin, nint_t imagmin, nint_t realmax, nint_t imagmax, int hres, int vres, int start, int skip)
 {
   nint_t deltareal, deltaimag, real0,  imag0;
   int x, y;
@@ -55,8 +59,8 @@ void mand_calc(int *image, nint_t realmin, nint_t imagmin, nint_t realmax, nint_
   deltareal = (realmax - realmin) / hres;
   deltaimag = (imagmax - imagmin) / vres;
 
-  real0 = realmin;
-  for (x = 0; x < hres; x++)
+  real0 = realmin + deltareal * start;
+  for (x = start; x < hres; x += skip)
   {
     imag0 = imagmax;
     for (y = 0; y < vres; y++)
@@ -64,9 +68,24 @@ void mand_calc(int *image, nint_t realmin, nint_t imagmin, nint_t realmax, nint_
       *(image + x + hres * y) = iterate(real0, imag0);
       imag0 -= deltaimag;
     }
-    real0 += deltareal;
+    real0 += deltareal * skip;
   }
 }
+
+
+#ifdef WITH_THREADS
+static int *image_;
+static nint_t realmin_, imagmin_, realmax_, imagmax_;
+static int hres_, vres_;
+static int nthreads_ = NUM_THREADS;
+
+
+void *mand_thread(void *n)
+{
+   mand_calc(image_, realmin_, imagmin_, realmax_, imagmax_, hres_, vres_, (intptr_t) n, nthreads_);
+   return NULL;
+}
+#endif
 
 
 /*! Translate iteration count into an RGB color value.
@@ -120,6 +139,10 @@ int main(int argc, char **argv)
    double bbox[] = {-2.0, -1.2, 0.7, 1.2};   // realmin, imagmin, realmax, imagmax
    int width = 600, height = 400;            // pixel resolution
    int *image;                               // raw pixel data
+#ifdef WITH_THREADS
+   pthread_t fdt[MAX_THREADS];
+   int i;
+#endif
 
    // parse command line arguments
    if (argc >= 2 && !strcmp(argv[1], "-h"))
@@ -139,15 +162,33 @@ int main(int argc, char **argv)
    gettimeofday(&tv0, NULL);
 #endif
 
+#ifdef WITH_THREADS
+   hres_ = width;
+   vres_ = height;
+   realmin_ = bbox[0] * NORM_FACT;
+   imagmin_ = bbox[1] * NORM_FACT;
+   realmax_ = bbox[2] * NORM_FACT;
+   imagmax_ = bbox[3] * NORM_FACT;
+   image_ = image;
+
+   for (i = 0; i < nthreads_; i++)
+      pthread_create(&fdt[i], NULL, mand_thread, (void*) (intptr_t) i);
+#else
    // call calculation of image
    mand_calc(image,
          bbox[0] * NORM_FACT, bbox[1] * NORM_FACT, bbox[2] * NORM_FACT, bbox[3] * NORM_FACT,
-         width, height);
+         width, height, 0, 1);
+#endif
 
 #ifdef WITH_TIME
    gettimeofday(&tv1, NULL);
    timersub(&tv1, &tv0, &tv);
    printf("%ld.%06ld\n", tv.tv_sec, tv.tv_usec);
+#endif
+
+#ifdef WITH_THREADS
+   for (i = 0; i < nthreads_; i++)
+      pthread_join(fdt[i], NULL);
 #endif
 
    // save image to disk
