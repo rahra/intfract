@@ -119,7 +119,7 @@ int main(int argc, char **argv)
 {
    double bbox[] = {-2.0, -1.2, 0.7, 1.2};   // realmin, imagmin, realmax, imagmax
    int width = 600, height = 400;            // pixel resolution
-   int image[width * height];                // raw pixel data
+   int *image;                               // raw pixel data
 
    // parse command line arguments
    if (argc >= 2 && !strcmp(argv[1], "-h"))
@@ -127,6 +127,12 @@ int main(int argc, char **argv)
    if (argc >= 5)
       for (int i = 0; i < 4; i++)
          bbox[i] = atof(argv[i + 1]);
+
+   if ((image = malloc(width * height * sizeof(*image))) == NULL)
+   {
+      perror("malloc()");
+      return 1;
+   }
 
 #ifdef WITH_TIME
    struct timeval tv0, tv1, tv;
@@ -147,6 +153,7 @@ int main(int argc, char **argv)
    // save image to disk
    cairo_save_image(image, width, height);
 
+   free(image);
    return 0;
 }
 
