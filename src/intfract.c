@@ -256,15 +256,15 @@ int main(int argc, char **argv)
          width, height, 0, 1);
 #endif
 
+#ifdef WITH_THREADS
+   for (i = 0; i < nthreads_; i++)
+      pthread_join(fdt[i], NULL);
+#endif
+
 #ifdef WITH_TIME
    gettimeofday(&tv1, NULL);
    timersub(&tv1, &tv0, &tv);
    printf("%ld.%06ld\n", tv.tv_sec, tv.tv_usec);
-#endif
-
-#ifdef WITH_THREADS
-   for (i = 0; i < nthreads_; i++)
-      pthread_join(fdt[i], NULL);
 #endif
 
    // save image to disk
