@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <cairo.h>
 #ifdef WITH_TIME
 #include <sys/time.h>
@@ -39,6 +40,14 @@
 #endif
 
 #include "intfract.h"
+
+#define WIDTH 1920
+#define HEIGHT 1080
+
+enum {COLSET_RED, COLSET_GREEN_BLUE, COLSET_RED_YELLOW, COLSET_BLUE, COLSET_BLACK_WHITE, NUM_COLSET};
+
+
+static int colset_ = 0;
 
 
 /*! This function contains the outer loop, i.e. calculate the coordinates
@@ -95,14 +104,25 @@ void *mand_thread(void *n)
  */
 int fract_color(unsigned int itcnt)
 {
-   // red color set
-   //return itcnt >= MAXITERATE ? 0 : IT8(itcnt) << 17;
-   // green and blue color set
-   //return itcnt >= MAXITERATE ? 0 : (IT8(itcnt) << 1) | ((256 + IT8(itcnt)) << 10);
-   // read and yellow color set
-   return itcnt >= MAXITERATE ? 0 : (IT8(itcnt) << 17) | ((256 + IT8(itcnt)) << 10);
-   // black white color set
-   //return (itcnt & 1) * 0xffffff;
+   switch (colset_)
+   {
+      // red color set
+      default:
+      case COLSET_RED:
+         return itcnt >= MAXITERATE ? 0 : IT8(itcnt) << 17;
+      // green and blue color set
+      case COLSET_GREEN_BLUE:
+         return itcnt >= MAXITERATE ? 0 : (IT8(itcnt) << 1) | ((256 + IT8(itcnt)) << 10);
+      // red and yellow color set
+      case COLSET_RED_YELLOW:
+         return itcnt >= MAXITERATE ? 0 : (IT8(itcnt) << 17) | ((256 + IT8(itcnt)) << 10);
+      // blue only
+      case COLSET_BLUE:
+         return itcnt >= MAXITERATE ? 0 : IT8(itcnt);
+      // black white color set
+      case COLSET_BLACK_WHITE:
+         return (itcnt & 1) * 0xffffff;
+   }
 }
 
 
@@ -111,7 +131,7 @@ int fract_color(unsigned int itcnt)
  * @param hres Pixel width of image.
  * @param vres Pixel height of image.
  */
-void cairo_save_image(const int *image, int hres, int vres)
+void cairo_save_image(const int *image, int hres, int vres, const char *s)
 {
    cairo_surface_t *sfc;
    unsigned char *pdata;
@@ -129,27 +149,77 @@ void cairo_save_image(const int *image, int hres, int vres)
          *((int*) pdata + x) = fract_color(*image);
 
    cairo_surface_mark_dirty(sfc);
-   cairo_surface_write_to_png(sfc, "intfract.png");
+   cairo_surface_write_to_png(sfc, s);
    cairo_surface_destroy(sfc);
+}
+
+
+void usage(const char *s)
+{
+   printf("usage: %s [options] [realmin] [imagmin] [realmax] [imagmax]\n"
+         "    -c <colset> ...... Choose color set: 0 - %d\n"
+         "    -h ............... Display this help screen.\n"
+         "    -n <threads> ..... Choose number of threads (default = %d).\n"
+         "    -o <filename> .... Name of output PNG file.\n"
+         "    -x <width> ....... Choose image width (default = %d).\n"
+         "    -y <height> ...... Choose image height (default = %d).\n"
+         , s, NUM_COLSET - 1, NUM_THREADS, WIDTH, HEIGHT);
 }
 
 
 int main(int argc, char **argv)
 {
    double bbox[] = {-2.0, -1.2, 0.7, 1.2};   // realmin, imagmin, realmax, imagmax
-   int width = 600, height = 400;            // pixel resolution
+   int width = WIDTH, height = HEIGHT;       // pixel resolution
    int *image;                               // raw pixel data
+   int n;
+   char *out = "intfract.png";
 #ifdef WITH_THREADS
    pthread_t fdt[MAX_THREADS];
    int i;
 #endif
 
-   // parse command line arguments
-   if (argc >= 2 && !strcmp(argv[1], "-h"))
-      printf("usage: %s [realmin imagmin realmax imagmax]\n", argv[0]), exit(0);
-   if (argc >= 5)
-      for (int i = 0; i < 4; i++)
-         bbox[i] = atof(argv[i + 1]);
+   while ((n = getopt(argc, argv, "c:hn:o:x:y:")) != -1)
+      switch (n)
+      {
+         case 'h':
+            usage(argv[0]);
+            exit(EXIT_SUCCESS);
+
+         case 'c':
+            colset_ = atoi(optarg);
+            if (colset_ < 0 || colset_ >= NUM_COLSET)
+               colset_ = 0;
+            break;
+
+         case 'n':
+            nthreads_ = atoi(optarg);
+            if (nthreads_ <= 1 || nthreads_ > MAX_THREADS)
+               nthreads_ = NUM_THREADS;
+            break;
+
+         case 'o':
+            out = optarg;
+            break;
+
+         case 'x':
+            width = atoi(optarg);
+            if (width <= 0)
+               width = WIDTH;
+            break;
+
+         case 'y':
+            height = atoi(optarg);
+            if (height <= 0)
+               height = HEIGHT;
+            break;
+      }
+
+   // parse remaining command line arguments
+   for (int i = 0; optind < argc; i++, optind++)
+         bbox[i] = atof(argv[optind]);
+
+   printf("realmin = %f, imagmin = %f, realmax = %f, imagmax = %f\n", bbox[0], bbox[1], bbox[2], bbox[3]);
 
    if ((image = malloc(width * height * sizeof(*image))) == NULL)
    {
@@ -192,7 +262,7 @@ int main(int argc, char **argv)
 #endif
 
    // save image to disk
-   cairo_save_image(image, width, height);
+   cairo_save_image(image, width, height, out);
 
    free(image);
    return 0;
