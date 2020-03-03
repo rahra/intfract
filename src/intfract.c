@@ -160,11 +160,12 @@ void usage(const char *s)
    printf("usage: %s [options] [realmin] [imagmin] [realmax] [imagmax]\n"
          "    -c <colset> ...... Choose color set: 0 - %d\n"
          "    -h ............... Display this help screen.\n"
+         "    -i <n> ........... Set maximum number of iterations (default = %d).\n"
          "    -n <threads> ..... Choose number of threads (default = %d).\n"
          "    -o <filename> .... Name of output PNG file.\n"
          "    -x <width> ....... Choose image width (default = %d).\n"
          "    -y <height> ...... Choose image height (default = %d).\n"
-         , s, NUM_COLSET - 1, NUM_THREADS, WIDTH, HEIGHT);
+         , s, NUM_COLSET - 1, MAXITERATE, NUM_THREADS, WIDTH, HEIGHT);
 }
 
 
@@ -180,7 +181,7 @@ int main(int argc, char **argv)
    int i;
 #endif
 
-   while ((n = getopt(argc, argv, "c:hn:o:x:y:")) != -1)
+   while ((n = getopt(argc, argv, "c:hi:n:o:x:y:")) != -1)
       switch (n)
       {
          case 'h':
@@ -191,6 +192,12 @@ int main(int argc, char **argv)
             colset_ = atoi(optarg);
             if (colset_ < 0 || colset_ >= NUM_COLSET)
                colset_ = 0;
+            break;
+
+         case 'i':
+            maxiterate_ = atoi(optarg);
+            if (maxiterate_ <= 0)
+               maxiterate_ = MAXITERATE;
             break;
 
          case 'n':
