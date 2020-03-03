@@ -47,6 +47,7 @@
 enum {COLSET_RED, COLSET_GREEN_BLUE, COLSET_RED_YELLOW, COLSET_BLUE, COLSET_BLACK_WHITE, NUM_COLSET};
 
 
+int maxiterate_ = MAXITERATE;
 static int colset_ = 0;
 
 
@@ -100,7 +101,7 @@ void *mand_thread(void *n)
 /*! Translate iteration count into an RGB color value.
  * @param itcnt Number of iterations.
  * @return Returns an RGB color value. If itcnt is greater or equal to
- * MAXITERATE, 0 is returned (which is black).
+ * maxiterate_, 0 is returned (which is black).
  */
 int fract_color(unsigned int itcnt)
 {
@@ -109,16 +110,16 @@ int fract_color(unsigned int itcnt)
       // red color set
       default:
       case COLSET_RED:
-         return itcnt >= MAXITERATE ? 0 : IT8(itcnt) << 17;
+         return itcnt >= maxiterate_ ? 0 : IT8(itcnt) << 17;
       // green and blue color set
       case COLSET_GREEN_BLUE:
-         return itcnt >= MAXITERATE ? 0 : (IT8(itcnt) << 1) | ((256 + IT8(itcnt)) << 10);
+         return itcnt >= maxiterate_ ? 0 : (IT8(itcnt) << 1) | ((256 + IT8(itcnt)) << 10);
       // red and yellow color set
       case COLSET_RED_YELLOW:
-         return itcnt >= MAXITERATE ? 0 : (IT8(itcnt) << 17) | ((256 + IT8(itcnt)) << 10);
+         return itcnt >= maxiterate_ ? 0 : (IT8(itcnt) << 17) | ((256 + IT8(itcnt)) << 10);
       // blue only
       case COLSET_BLUE:
-         return itcnt >= MAXITERATE ? 0 : IT8(itcnt);
+         return itcnt >= maxiterate_ ? 0 : IT8(itcnt);
       // black white color set
       case COLSET_BLACK_WHITE:
          return (itcnt & 1) * 0xffffff;
@@ -218,8 +219,6 @@ int main(int argc, char **argv)
    // parse remaining command line arguments
    for (int i = 0; optind < argc; i++, optind++)
          bbox[i] = atof(argv[optind]);
-
-   printf("realmin = %f, imagmin = %f, realmax = %f, imagmax = %f\n", bbox[0], bbox[1], bbox[2], bbox[3]);
 
    if ((image = malloc(width * height * sizeof(*image))) == NULL)
    {

@@ -36,7 +36,7 @@
 #define MAXITERATE 64
 
 
-#define IT8(x) ((x) * 255 / MAXITERATE)
+#define IT8(x) ((x) * 255 / maxiterate_)
 
 #ifdef USE_DOUBLE
 #ifndef __ASSEMBLER__
@@ -56,6 +56,7 @@ typedef long nint_t;
 #ifndef __ASSEMBLER__
 // prototype for iterate()
 int iterate(nint_t real0, nint_t imag0);
+extern int maxiterate_;
 #endif
 
 #endif

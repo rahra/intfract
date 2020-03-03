@@ -36,7 +36,7 @@ int iterate(nint_t real0, nint_t imag0)
 
    real = real0;
    imag = imag0;
-   for (i = 0; i < MAXITERATE; i++)
+   for (i = 0; i < maxiterate_; i++)
    {
      realq = (real * real) >> NORM_BITS;
      imagq = (imag * imag) >> NORM_BITS;

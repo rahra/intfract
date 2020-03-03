@@ -56,7 +56,7 @@ iterate:
    mov   %rsi,IMAG(%rbp)
 
 /***** function body *****/
-   mov   $MAXITERATE,%rcx
+   movzx maxiterate_(%rip),%rcx
 
 .Litloop:
 
@@ -88,7 +88,7 @@ iterate:
 
 .Litbrk:
 /***** return value goes to EAX *****/
-   mov   $MAXITERATE,%eax
+   mov   maxiterate_(%rip),%eax
    sub   %ecx,%eax
 
 /***** function epilog *****/
@@ -114,7 +114,7 @@ iterate:
    mov   %rdi,%r8             // real = real0
    mov   %rsi,%r9             // imag = imag0
 
-   mov   $MAXITERATE,%ecx     // i = 64
+   mov   maxiterate_(%rip),%ecx     // i = 64
    jmp   .Litloop
    .align 16
 .Litloop:
@@ -144,7 +144,7 @@ iterate:
 .Litbrk:
 
 /***** return value goes to EAX *****/
-   mov   $MAXITERATE,%eax
+   mov   maxiterate_(%rip),%eax
    sub   %ecx,%eax
 
    ret
