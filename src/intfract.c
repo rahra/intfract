@@ -127,6 +127,12 @@ int fract_color(unsigned int itcnt)
 }
 
 
+static cairo_status_t cairo_write(void *closure, const unsigned char *data, unsigned int length)
+{
+   return fwrite(data, length, 1, closure) ? CAIRO_STATUS_SUCCESS : CAIRO_STATUS_WRITE_ERROR;
+}
+
+
 /*! Save raw pixel data to PNG file using libcairo.
  * @param image Pointer to image array of size hres * vres elements.
  * @param hres Pixel width of image.
@@ -137,7 +143,25 @@ void cairo_save_image(const int *image, int hres, int vres, const char *s)
    cairo_surface_t *sfc;
    unsigned char *pdata;
    int x, y, stride;
+   FILE *f;
 
+   // safety check
+   if (image == NULL || s == NULL)
+   {
+      fprintf(stderr, "this should never happen...\n");
+      return;
+   }
+
+   // check for stdout
+   if (!strcmp(s, "-"))
+   {
+      f = stdout;
+   }
+   else if ((f = fopen(s, "w")) == NULL)
+   {
+      fprintf(stderr, "failed to open file %s\n", s);
+      return;
+   }
 
    sfc = cairo_image_surface_create(CAIRO_FORMAT_RGB24, hres, vres);
    stride = cairo_image_surface_get_stride(sfc);
@@ -150,8 +174,10 @@ void cairo_save_image(const int *image, int hres, int vres, const char *s)
          *((int*) pdata + x) = fract_color(*image);
 
    cairo_surface_mark_dirty(sfc);
-   cairo_surface_write_to_png(sfc, s);
+   cairo_surface_write_to_png_stream(sfc, cairo_write, f);
    cairo_surface_destroy(sfc);
+
+   fclose(f);
 }
 
 
@@ -162,7 +188,7 @@ void usage(const char *s)
          "    -h ............... Display this help screen.\n"
          "    -i <n> ........... Set maximum number of iterations (default = %d).\n"
          "    -n <threads> ..... Choose number of threads (default = %d).\n"
-         "    -o <filename> .... Name of output PNG file.\n"
+         "    -o <filename> .... Name of output PNG file, \"-\" for stdout.\n"
          "    -x <width> ....... Choose image width (default = %d).\n"
          "    -y <height> ...... Choose image height (default = %d).\n"
          , s, NUM_COLSET - 1, MAXITERATE, NUM_THREADS, WIDTH, HEIGHT);
@@ -268,7 +294,7 @@ int main(int argc, char **argv)
 #ifdef WITH_TIME
    gettimeofday(&tv1, NULL);
    timersub(&tv1, &tv0, &tv);
-   printf("%ld.%06ld\n", tv.tv_sec, tv.tv_usec);
+   fprintf(stderr, "%ld.%06ld\n", tv.tv_sec, tv.tv_usec);
 #endif
 
    // save image to disk
