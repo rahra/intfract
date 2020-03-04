@@ -201,9 +201,13 @@ int main(int argc, char **argv)
             break;
 
          case 'n':
+#ifdef WITH_THREADS
             nthreads_ = atoi(optarg);
             if (nthreads_ <= 1 || nthreads_ > MAX_THREADS)
                nthreads_ = NUM_THREADS;
+#else
+            fprintf(stderr, "thread support not compiled\n");
+#endif
             break;
 
          case 'o':

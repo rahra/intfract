@@ -23,6 +23,8 @@
 #include <pthread.h>
 #define MAX_THREADS 32
 #define NUM_THREADS 4
+#else
+#define NUM_THREADS 1
 #endif
 
 // define to compile with assembler iterate() function
