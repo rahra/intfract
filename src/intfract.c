@@ -75,7 +75,7 @@ void mand_calc(int *image, nint_t realmin, nint_t imagmin, nint_t realmax, nint_
     imag0 = imagmax;
     for (y = 0; y < vres; y++)
     {
-      *(image + x + hres * y) = iterate(real0, imag0);
+      *(image + x + hres * (vres - y - 1)) = iterate(real0, imag0);
       imag0 -= deltaimag;
     }
     real0 += deltareal * skip;
