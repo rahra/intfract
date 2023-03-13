@@ -29,13 +29,13 @@ written on Amiga 500 around 1990.
 
 It was in the late ’80s when I started to become interested in
 [fractals](https://en.wikipedia.org/wiki/Fractal). At the time then computers
-very unbelievable slow compared to what we have today thus I tried to speed up
+were unbelievable slow compared to what we have today thus I tried to speed up
 the algorithms in several ways.
 
 This article is about using integer operations to calculate fractal images,
 more specifically I’ll explain how to replace floating point operations by
 integer operations (It is not about the theory behind fractals. There’s a lot
-literature about that.).
+of literature about that.).
 
 ![intfract2.png](img/intfract2.png)`(-1.82/-0.07) (-1.7/0.07)`
 
@@ -47,7 +47,7 @@ high. Intel PCs at the time then looked like an old rusty bicycle compared to
 the Amiga computer. The Amiga’s core was a Motorola 68000 CPU which internally
 was a full 32 bit microprocessor using the CISC design. Thus, it was a pleasure
 to write assembler code compared to other CPUs. But still, most systems had no
-floating point unit as it usual for modern computers of today. Thus floating
+floating point unit as it is common for modern computers of today. Thus floating
 point operations had to be implemented in software.
 
 ## Background
@@ -68,7 +68,9 @@ bit size of the registers, floating point arithmetics, or even more complex
 algorithms such as trigonometric functions or similar.
 
 The goal is to avoid expensive operations particularly in the inner loops of
-algorithms.  Fixed Point Arithmetic
+algorithms.
+
+## Fixed Point Arithmetic
 
 Replacing floating point operations by integer operations technically is a
 fixed point arithmetic. That is that we move the decimal point to another fixed
@@ -79,7 +81,7 @@ results are 3.83 = 3.14 + 0.69, and 2.16 = 3.14 * 0.69. Unfortunately our CPU
 cannot deal with decimal numbers thus we loose the fractional part and in turn
 we will loose a lot of precision: 3 = 3 + 0, and 0 = 3 * 0.
 
-To solve this we move the point 2 digits to the right. Mathematically this is
+To solve this we move the decimal point 2 digits to the right. Mathematically this is
 multiplying by 100 in this example. Thus 314 = 3.14 * 100 and 69 = 0.69 * 100.
 Now we can add them since they are integer numbers: 383 = 314 + 69. To get the
 result just divide by 100 again which is 3.83 = 383 / 100.
