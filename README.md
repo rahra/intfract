@@ -224,8 +224,8 @@ be written in assembler. For the benchmark I used gettimeofday(2) directly
 before and after calculating the image. The iteration loop is set to MAXITERATE
 = 50 000 and I ran every attempt 5 times and then calculated the average time
 value. At an image resolution of 640×400 the iteration loop would be executed
-12.8×109 (12.8 billion) times in the worst case. At the given coordinates and
-zoom level the iteration loop is actually executed 2.8×109 times.
+12.8×10⁹ (12.8 billion) times in the worst case. At the given coordinates and
+zoom level the iteration loop is actually executed 2.8×10⁹ times.
 
 I ran the programs directly on the console without X11 to avoid interference
 with other tasks and to reduce the influence of multi-tasking as much as
