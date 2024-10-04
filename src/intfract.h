@@ -32,7 +32,11 @@
 
 // Define to use double (floating point operations), otherwise integer
 // arithmetics is used.
-#define USE_DOUBLE
+//#define USE_DOUBLE
+
+#if defined(ASM_ITERATE) && defined(USE_DOUBLE)
+#error you cannot define ASM_ITERATE and USE_DOUBLE
+#endif
 
 // maximum number of iterations of the inner loop
 #define MAXITERATE 64
