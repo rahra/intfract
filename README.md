@@ -1,5 +1,3 @@
-**Please note that there is a multi-threaded variant in the [multithread branch](https://github.com/rahra/intfract/tree/multithread) which makes use of multiple cores which gives an additional speed-up!**
-
 # Calculating Fractals With Integer Operations
 
 This program demonstrates how to use integers instead of floating point
