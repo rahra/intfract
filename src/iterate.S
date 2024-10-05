@@ -1,4 +1,20 @@
-/*! This is a solution for the function iterate() written in x86_64 assembler.
+/* Copyright 2015-2024 Bernhard R. Fischer, 4096R/8E24F29D <bf@abenteuerland.at>
+ *
+ * IntFract is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3 of the License.
+ *
+ * IntFract is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with IntFract. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/*! \file iterate.S
+ * This is a solution for the function iterate() written in x86_64 assembler.
  * The file contains two variants. First, define the cpp macro CONSERVATIVE to
  * activate a traditional solution using stack variables. The second solution
  * (undefine CONSERVATIVE) shows a faster register-only implementation.

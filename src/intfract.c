@@ -1,4 +1,4 @@
-/* Copyright 2015 Bernhard R. Fischer, 2048R/5C5FFD47 <bf@abenteuerland.at>
+/* Copyright 2015-2024 Bernhard R. Fischer, 4096R/8E24F29D <bf@abenteuerland.at>
  *
  * IntFract is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -13,7 +13,8 @@
  * along with IntFract. If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* This program calculates fractal images. It shows how to use integer
+/* \file intfract.c
+ * This program calculates fractal images. It shows how to use integer
  * arithmetics instead of floating point operations.
  *
  * I wrote this program originally at about 1990 for the Amiga 500 in C and

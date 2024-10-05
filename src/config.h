@@ -30,7 +30,7 @@
 
 //! Define to use conservative stack-variable-solution. This is only effective if ASM_ITERATE is defined.
 //#define CONSERVATIVE
-//
+
 //! Define to use instruction "enter" for function prolog. This is only effective if CONSERVATIVE is defined.
 //#define WITH_ENTER
 
