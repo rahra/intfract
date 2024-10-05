@@ -1,4 +1,4 @@
-/* Copyright 2015 Bernhard R. Fischer, 2048R/5C5FFD47 <bf@abenteuerland.at>
+/* Copyright 2015-2024 Bernhard R. Fischer, 4096R/8E24F29D <bf@abenteuerland.at>
  *
  * IntFract is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ int iterate(nint_t real0, nint_t imag0)
 
    real = real0;
    imag = imag0;
-   for (i = 0; i < MAXITERATE; i++)
+   for (i = 0; i < maxiterate_; i++)
    {
      realq = real * real;
      imagq = imag * imag;

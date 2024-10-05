@@ -14,7 +14,9 @@ Operations«](https://www.cypherpunk.at/2015/10/calculating-fractals-with-intege
 
 ## Implementation Variants
 
-This package contains several implementations:
+Have a look at the file `config.h` to modify the following options.
+The code by default is configured to be multithreaded, making use of parallization on multiple CPUs.
+This package contains several implementation variants of the inner loop in the following files:
 
 * `iterated.c` is a strait forward implementation of the iteration loop using `double`s.
 * `iteratel.c` is an implementation of the same algorithm using integers of type `long` instead.

@@ -1,4 +1,4 @@
-/* Copyright 2015 Bernhard R. Fischer, 2048R/5C5FFD47 <bf@abenteuerland.at>
+/* Copyright 2015-2024 Bernhard R. Fischer, 4096R/8E24F29D <bf@abenteuerland.at>
  *
  * IntFract is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -13,7 +13,8 @@
  * along with IntFract. If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* This program calculates fractal images. It shows how to use integer
+/* \file intfract.c
+ * This program calculates fractal images. It shows how to use integer
  * arithmetics instead of floating point operations.
  *
  * I wrote this program originally at about 1990 for the Amiga 500 in C and
@@ -29,12 +30,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <cairo.h>
 #ifdef WITH_TIME
 #include <sys/time.h>
 #endif
+#ifdef WITH_THREADS
+#include <stdint.h>
+#include <pthread.h>
+#endif
 
 #include "intfract.h"
+
+#define WIDTH 1920
+#define HEIGHT 1080
+
+enum {COLSET_RED, COLSET_GREEN_BLUE, COLSET_RED_YELLOW, COLSET_BLUE, COLSET_BLACK_WHITE, NUM_COLSET};
+
+
+int maxiterate_ = MAXITERATE;
+static int colset_ = 0;
 
 
 /*! This function contains the outer loop, i.e. calculate the coordinates
@@ -47,7 +62,7 @@
  * @param hres Pixel width of image.
  * @param vres Pixel height of image.
  */
-void mand_calc(int *image, nint_t realmin, nint_t imagmin, nint_t realmax, nint_t imagmax, int hres, int vres)
+void mand_calc(int *image, nint_t realmin, nint_t imagmin, nint_t realmax, nint_t imagmax, int hres, int vres, int start, int skip)
 {
   nint_t deltareal, deltaimag, real0,  imag0;
   int x, y;
@@ -55,35 +70,67 @@ void mand_calc(int *image, nint_t realmin, nint_t imagmin, nint_t realmax, nint_
   deltareal = (realmax - realmin) / hres;
   deltaimag = (imagmax - imagmin) / vres;
 
-  real0 = realmin;
-  for (x = 0; x < hres; x++)
+  real0 = realmin + deltareal * start;
+  for (x = start; x < hres; x += skip)
   {
     imag0 = imagmax;
     for (y = 0; y < vres; y++)
     {
-      *(image + x + hres * y) = iterate(real0, imag0);
+      *(image + x + hres * (vres - y - 1)) = iterate(real0, imag0);
       imag0 -= deltaimag;
     }
-    real0 += deltareal;
+    real0 += deltareal * skip;
   }
 }
+
+
+#ifdef WITH_THREADS
+static int *image_;
+static nint_t realmin_, imagmin_, realmax_, imagmax_;
+static int hres_, vres_;
+static int nthreads_ = NUM_THREADS;
+
+
+void *mand_thread(void *n)
+{
+   mand_calc(image_, realmin_, imagmin_, realmax_, imagmax_, hres_, vres_, (intptr_t) n, nthreads_);
+   return NULL;
+}
+#endif
 
 
 /*! Translate iteration count into an RGB color value.
  * @param itcnt Number of iterations.
  * @return Returns an RGB color value. If itcnt is greater or equal to
- * MAXITERATE, 0 is returned (which is black).
+ * maxiterate_, 0 is returned (which is black).
  */
 int fract_color(unsigned int itcnt)
 {
-   // red color set
-   //return itcnt >= MAXITERATE ? 0 : IT8(itcnt) << 17;
-   // green and blue color set
-   //return itcnt >= MAXITERATE ? 0 : (IT8(itcnt) << 1) | ((256 + IT8(itcnt)) << 10);
-   // read and yellow color set
-   return itcnt >= MAXITERATE ? 0 : (IT8(itcnt) << 17) | ((256 + IT8(itcnt)) << 10);
-   // black white color set
-   //return (itcnt & 1) * 0xffffff;
+   switch (colset_)
+   {
+      // red color set
+      default:
+      case COLSET_RED:
+         return itcnt >= maxiterate_ ? 0 : IT8(itcnt) << 17;
+      // green and blue color set
+      case COLSET_GREEN_BLUE:
+         return itcnt >= maxiterate_ ? 0 : (IT8(itcnt) << 1) | ((256 + IT8(itcnt)) << 10);
+      // red and yellow color set
+      case COLSET_RED_YELLOW:
+         return itcnt >= maxiterate_ ? 0 : (IT8(itcnt) << 17) | ((256 + IT8(itcnt)) << 10);
+      // blue only
+      case COLSET_BLUE:
+         return itcnt >= maxiterate_ ? 0 : IT8(itcnt);
+      // black white color set
+      case COLSET_BLACK_WHITE:
+         return (itcnt & 1) * 0xffffff;
+   }
+}
+
+
+static cairo_status_t cairo_write(void *closure, const unsigned char *data, unsigned int length)
+{
+   return fwrite(data, length, 1, closure) ? CAIRO_STATUS_SUCCESS : CAIRO_STATUS_WRITE_ERROR;
 }
 
 
@@ -92,12 +139,30 @@ int fract_color(unsigned int itcnt)
  * @param hres Pixel width of image.
  * @param vres Pixel height of image.
  */
-void cairo_save_image(const int *image, int hres, int vres)
+void cairo_save_image(const int *image, int hres, int vres, const char *s)
 {
    cairo_surface_t *sfc;
    unsigned char *pdata;
    int x, y, stride;
+   FILE *f;
 
+   // safety check
+   if (image == NULL || s == NULL)
+   {
+      fprintf(stderr, "this should never happen...\n");
+      return;
+   }
+
+   // check for stdout
+   if (!strcmp(s, "-"))
+   {
+      f = stdout;
+   }
+   else if ((f = fopen(s, "w")) == NULL)
+   {
+      fprintf(stderr, "failed to open file %s\n", s);
+      return;
+   }
 
    sfc = cairo_image_surface_create(CAIRO_FORMAT_RGB24, hres, vres);
    stride = cairo_image_surface_get_stride(sfc);
@@ -110,23 +175,88 @@ void cairo_save_image(const int *image, int hres, int vres)
          *((int*) pdata + x) = fract_color(*image);
 
    cairo_surface_mark_dirty(sfc);
-   cairo_surface_write_to_png(sfc, "intfract.png");
+   cairo_surface_write_to_png_stream(sfc, cairo_write, f);
    cairo_surface_destroy(sfc);
+
+   fclose(f);
+}
+
+
+void usage(const char *s)
+{
+   printf("usage: %s [options] [realmin] [imagmin] [realmax] [imagmax]\n"
+         "    -c <colset> ...... Choose color set: 0 - %d\n"
+         "    -h ............... Display this help screen.\n"
+         "    -i <n> ........... Set maximum number of iterations (default = %d).\n"
+         "    -n <threads> ..... Choose number of threads (default = %d).\n"
+         "    -o <filename> .... Name of output PNG file, \"-\" for stdout.\n"
+         "    -x <width> ....... Choose image width (default = %d).\n"
+         "    -y <height> ...... Choose image height (default = %d).\n"
+         , s, NUM_COLSET - 1, MAXITERATE, NUM_THREADS, WIDTH, HEIGHT);
 }
 
 
 int main(int argc, char **argv)
 {
    double bbox[] = {-2.0, -1.2, 0.7, 1.2};   // realmin, imagmin, realmax, imagmax
-   int width = 600, height = 400;            // pixel resolution
+   int width = WIDTH, height = HEIGHT;       // pixel resolution
    int *image;                               // raw pixel data
+   int n;
+   char *out = "intfract.png";
+#ifdef WITH_THREADS
+   pthread_t fdt[MAX_THREADS];
+   int i;
+#endif
 
-   // parse command line arguments
-   if (argc >= 2 && !strcmp(argv[1], "-h"))
-      printf("usage: %s [realmin imagmin realmax imagmax]\n", argv[0]), exit(0);
-   if (argc >= 5)
-      for (int i = 0; i < 4; i++)
-         bbox[i] = atof(argv[i + 1]);
+   while ((n = getopt(argc, argv, "c:hi:n:o:x:y:")) != -1)
+      switch (n)
+      {
+         case 'h':
+            usage(argv[0]);
+            exit(EXIT_SUCCESS);
+
+         case 'c':
+            colset_ = atoi(optarg);
+            if (colset_ < 0 || colset_ >= NUM_COLSET)
+               colset_ = 0;
+            break;
+
+         case 'i':
+            maxiterate_ = atoi(optarg);
+            if (maxiterate_ <= 0)
+               maxiterate_ = MAXITERATE;
+            break;
+
+         case 'n':
+#ifdef WITH_THREADS
+            nthreads_ = atoi(optarg);
+            if (nthreads_ <= 1 || nthreads_ > MAX_THREADS)
+               nthreads_ = NUM_THREADS;
+#else
+            fprintf(stderr, "thread support not compiled\n");
+#endif
+            break;
+
+         case 'o':
+            out = optarg;
+            break;
+
+         case 'x':
+            width = atoi(optarg);
+            if (width <= 0)
+               width = WIDTH;
+            break;
+
+         case 'y':
+            height = atoi(optarg);
+            if (height <= 0)
+               height = HEIGHT;
+            break;
+      }
+
+   // parse remaining command line arguments
+   for (int i = 0; optind < argc; i++, optind++)
+         bbox[i] = atof(argv[optind]);
 
    if ((image = malloc(width * height * sizeof(*image))) == NULL)
    {
@@ -139,19 +269,37 @@ int main(int argc, char **argv)
    gettimeofday(&tv0, NULL);
 #endif
 
+#ifdef WITH_THREADS
+   hres_ = width;
+   vres_ = height;
+   realmin_ = bbox[0] * NORM_FACT;
+   imagmin_ = bbox[1] * NORM_FACT;
+   realmax_ = bbox[2] * NORM_FACT;
+   imagmax_ = bbox[3] * NORM_FACT;
+   image_ = image;
+
+   for (i = 0; i < nthreads_; i++)
+      pthread_create(&fdt[i], NULL, mand_thread, (void*) (intptr_t) i);
+#else
    // call calculation of image
    mand_calc(image,
          bbox[0] * NORM_FACT, bbox[1] * NORM_FACT, bbox[2] * NORM_FACT, bbox[3] * NORM_FACT,
-         width, height);
+         width, height, 0, 1);
+#endif
+
+#ifdef WITH_THREADS
+   for (i = 0; i < nthreads_; i++)
+      pthread_join(fdt[i], NULL);
+#endif
 
 #ifdef WITH_TIME
    gettimeofday(&tv1, NULL);
    timersub(&tv1, &tv0, &tv);
-   printf("%ld.%06ld\n", tv.tv_sec, tv.tv_usec);
+   fprintf(stderr, "%ld.%06ld\n", tv.tv_sec, tv.tv_usec);
 #endif
 
    // save image to disk
-   cairo_save_image(image, width, height);
+   cairo_save_image(image, width, height, out);
 
    free(image);
    return 0;

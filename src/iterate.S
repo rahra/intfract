@@ -1,4 +1,20 @@
-/*! This is a solution for the function iterate() written in x86_64 assembler.
+/* Copyright 2015-2024 Bernhard R. Fischer, 4096R/8E24F29D <bf@abenteuerland.at>
+ *
+ * IntFract is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3 of the License.
+ *
+ * IntFract is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with IntFract. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/*! \file iterate.S
+ * This is a solution for the function iterate() written in x86_64 assembler.
  * The file contains two variants. First, define the cpp macro CONSERVATIVE to
  * activate a traditional solution using stack variables. The second solution
  * (undefine CONSERVATIVE) shows a faster register-only implementation.
@@ -14,15 +30,8 @@
 #ifdef ASM_ITERATE
 #ifndef USE_DOUBLE
 
-// Define to use conservative stack-variable-solution.
-//#define CONSERVATIVE
-#ifdef CONSERVATIVE
-// Define to use instruction "enter" for function prolog
-//#define WITH_ENTER
-// Define to use instruction "enter" for function epilog
-//#define WITH_LEAVE
-#endif
-
+   // set stack not executable
+   .section .note.GNU-stack,"",@progbits
 
    .section .text
    .align 16
@@ -56,7 +65,7 @@ iterate:
    mov   %rsi,IMAG(%rbp)
 
 /***** function body *****/
-   mov   $MAXITERATE,%rcx
+   movzx maxiterate_(%rip),%rcx
 
 .Litloop:
 
@@ -88,7 +97,7 @@ iterate:
 
 .Litbrk:
 /***** return value goes to EAX *****/
-   mov   $MAXITERATE,%eax
+   mov   maxiterate_(%rip),%eax
    sub   %ecx,%eax
 
 /***** function epilog *****/
@@ -114,7 +123,7 @@ iterate:
    mov   %rdi,%r8             // real = real0
    mov   %rsi,%r9             // imag = imag0
 
-   mov   $MAXITERATE,%ecx     // i = 64
+   mov   maxiterate_(%rip),%ecx     // i = 64
    jmp   .Litloop
    .align 16
 .Litloop:
@@ -144,7 +153,7 @@ iterate:
 .Litbrk:
 
 /***** return value goes to EAX *****/
-   mov   $MAXITERATE,%eax
+   mov   maxiterate_(%rip),%eax
    sub   %ecx,%eax
 
    ret
