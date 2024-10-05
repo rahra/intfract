@@ -30,6 +30,9 @@
 #ifdef ASM_ITERATE
 #ifndef USE_DOUBLE
 
+   // set stack not executable
+   .section .note.GNU-stack,"",@progbits
+
    .section .text
    .align 16
 
