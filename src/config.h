@@ -16,18 +16,26 @@
  */
 
 /* \file config.h
- * This filea contains casic config macros.
+ * This file contains basic config macros.
  */
 
-//! define to compile with thread support
+//! Define to compile with thread support.
 #define WITH_THREADS
 
-// define to compile with assembler iterate() function
+//! Define to compile with assembler iterate() function.
 #define ASM_ITERATE
 
-// Define to use double (floating point operations), otherwise integer
-// arithmetics is used.
+//! Define to use double (floating point operations), otherwise integer arithmetics is used.
 //#define USE_DOUBLE
+
+//! Define to use conservative stack-variable-solution. This is only effective if ASM_ITERATE is defined.
+//#define CONSERVATIVE
+//
+//! Define to use instruction "enter" for function prolog. This is only effective if CONSERVATIVE is defined.
+//#define WITH_ENTER
+
+//! Define to use instruction "leave" for function epilog. This is only effective if CONSERVATIVE is defined.
+//#define WITH_LEAVE
 
 #endif
 

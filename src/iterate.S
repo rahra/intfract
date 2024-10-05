@@ -14,16 +14,6 @@
 #ifdef ASM_ITERATE
 #ifndef USE_DOUBLE
 
-// Define to use conservative stack-variable-solution.
-//#define CONSERVATIVE
-#ifdef CONSERVATIVE
-// Define to use instruction "enter" for function prolog
-//#define WITH_ENTER
-// Define to use instruction "enter" for function epilog
-//#define WITH_LEAVE
-#endif
-
-
    .section .text
    .align 16
 
