@@ -1,6 +1,6 @@
 #ifndef INTFRACT_H
 #define INTFRACT_H
-/* Copyright 2015 Bernhard R. Fischer, 2048R/5C5FFD47 <bf@abenteuerland.at>
+/* Copyright 2015-2024 Bernhard R. Fischer, 4096R/8E24F29D <bf@abenteuerland.at>
  *
  * IntFract is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,20 +19,17 @@
  * This file contains some definitions.
  */
 
+#include "config.h"
+
 #ifdef WITH_THREADS
+#ifndef __ASSEMBLER__
 #include <pthread.h>
+#endif
 #define MAX_THREADS 32
 #define NUM_THREADS 4
 #else
 #define NUM_THREADS 1
 #endif
-
-// define to compile with assembler iterate() function
-#define ASM_ITERATE
-
-// Define to use double (floating point operations), otherwise integer
-// arithmetics is used.
-//#define USE_DOUBLE
 
 #if defined(ASM_ITERATE) && defined(USE_DOUBLE)
 #error you cannot define ASM_ITERATE and USE_DOUBLE

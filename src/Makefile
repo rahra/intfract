@@ -1,7 +1,7 @@
 CC = gcc
 CAIRO_CFLAGS = $(shell pkg-config --cflags cairo)
 CAIRO_LDFLAGS = $(shell pkg-config --libs cairo)
-CFLAGS = -O2 -g -Wall -std=gnu99 -DWITH_TIME $(CAIRO_CFLAGS) -DWITH_THREADS
+CFLAGS = -O2 -g -Wall -std=gnu99 -DWITH_TIME $(CAIRO_CFLAGS)
 ASFLAGS =
 LDLIBS = -lm $(CAIRO_LDFLAGS) -lpthread
 LDFLAGS = -z noexecstack
