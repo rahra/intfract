@@ -234,7 +234,9 @@ void cairo_save_image(const int *image, int hres, int vres, const char *s)
 
 void usage(const char *s)
 {
-   printf("usage: %s [options] [realmin] [imagmin] [realmax] [imagmax]\n"
+   printf("intfract v2.1 © 2015-2024 Bernhard R. Fischer, <bf@abenteuerland.at>\n"
+         "usage: %s [options] [realmin(x0)] [imagmin(y0)] [realmax(x1)] [imagmax(y1)]\n"
+         "    -C ............... Coordinates are given as x/y and w/h instead of x0/y0 and x1/y1.\n"
          "    -c <colset> ...... Choose color set: 0 - %d\n"
          "    -h ............... Display this help screen.\n"
          "    -i <n> ........... Set maximum number of iterations (default = %d).\n"
@@ -244,6 +246,12 @@ void usage(const char *s)
          "    -y <height> ...... Choose image height (default = %d).\n"
          , s, NUM_COLSET - 1, MAXITERATE, nthreads_, WIDTH, HEIGHT);
    printf("\n    defs: sizeof(nint_t) = %ld, NORM_BITS = %d, NORM_FACT = %ld\n", sizeof(nint_t), NORM_BITS, NORM_FACT);
+#ifdef USE_DOUBLE
+   printf("    USE_DOUBLE is defined\n");
+#endif
+#ifdef ASM_ITERATE
+   printf("    ASM_ITERATE is defined\n");
+#endif
 }
 
 
@@ -257,18 +265,23 @@ int main(int argc, char **argv)
 #ifdef WITH_THREADS
    pthread_t fdt[MAX_THREADS];
    int i;
+   int cc = 0;
 
    nthreads_ = get_ncpu();
    if (nthreads_ <= 0)
       nthreads_ = NUM_THREADS;
 #endif
 
-   while ((n = getopt(argc, argv, "c:hi:n:o:x:y:")) != -1)
+   while ((n = getopt(argc, argv, "Cc:hi:n:o:x:y:")) != -1)
       switch (n)
       {
          case 'h':
             usage(argv[0]);
             exit(EXIT_SUCCESS);
+
+         case 'C':
+            cc = 1;
+            break;
 
          case 'c':
             colset_ = atoi(optarg);
@@ -312,6 +325,17 @@ int main(int argc, char **argv)
    // parse remaining command line arguments
    for (int i = 0; optind < argc; i++, optind++)
          bbox[i] = atof(argv[optind]);
+
+   // transform coordinates given as center and width/height
+   if (cc)
+   {
+      double a = bbox[2] / 2;
+      bbox[2] = bbox[0] + a;
+      bbox[0] -= a;
+      a = bbox[3] / 2;
+      bbox[3] = bbox[1] + a;
+      bbox[1] -= a;
+   }
 
    if ((image = malloc(width * height * sizeof(*image))) == NULL)
    {
