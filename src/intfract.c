@@ -216,6 +216,7 @@ void usage(const char *s)
          "    -x <width> ....... Choose image width (default = %d).\n"
          "    -y <height> ...... Choose image height (default = %d).\n"
          , s, NUM_COLSET - 1, MAXITERATE, nthreads_, WIDTH, HEIGHT);
+   printf("\n    defs: sizeof(nint_t) = %ld, NORM_BITS = %d, NORM_FACT = %ld\n", sizeof(nint_t), NORM_BITS, NORM_FACT);
 }
 
 

@@ -45,7 +45,8 @@
 #ifndef __ASSEMBLER__
 typedef double nint_t;
 #endif
-#define NORM_FACT 1
+#define NORM_FACT 1L
+#define NORM_BITS 0
 #else
 #ifdef __ASSEMBLER__
 #define NORM_FACT (1 << NORM_BITS)
