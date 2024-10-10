@@ -54,7 +54,9 @@ typedef double nint_t;
 typedef long nint_t;
 #define NORM_FACT ((nint_t)1 << NORM_BITS)
 #endif
-#define NORM_BITS 13
+//! The max number of bits b be depends on the machines word size n which is
+//! about b = n / 2 - 2. So if long int is 64 bits wide b = 64 / 2 - 2 = 30.
+#define NORM_BITS 30
 #endif
 
 #ifndef __ASSEMBLER__

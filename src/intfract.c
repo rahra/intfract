@@ -53,20 +53,6 @@ int maxiterate_ = MAXITERATE;
 static int colset_ = 0;
 
 
-/*! This function is a "rounding" integer division of nint_t is defined to be
- * an integer (i.e. USE_DOUBLE is not defined).
- */
-nint_t rdiv(nint_t n, nint_t d)
-{
-#ifdef USE_DOUBLE
-   return n / d;
-#else
-   // rounding integer division
-   return (n < 0) == (d < 0) ? (n + d /2) / d : (n - d / 2) / d;
-#endif
-}
-
-
 /*! This function contains the outer loop, i.e. calculate the coordinates
  * within the complex plane for each pixel and then call iterate().
  * @param image Pointer to image array of size hres * vres elements.
@@ -76,14 +62,22 @@ nint_t rdiv(nint_t n, nint_t d)
  * @param imagmax Maximum imaginary value.
  * @param hres Pixel width of image.
  * @param vres Pixel height of image.
+ * @param start Column to start calculation with.
+ * @param skip Number of columns to skip before starting with the next column.
  */
 void mand_calc(int *image, nint_t realmin, nint_t imagmin, nint_t realmax, nint_t imagmax, int hres, int vres, int start, int skip)
 {
   nint_t deltareal, deltaimag, real0,  imag0;
   int x, y;
 
-  deltareal = rdiv(realmax - realmin, hres);
-  deltaimag = rdiv(imagmax - imagmin, vres);
+  deltareal = realmax - realmin;
+  deltaimag = imagmax - imagmin;
+
+#ifdef USE_DOUBLE
+  // With datatype double we can minimize operations by incrementing real0 and
+  // image0 by a fraction of the pixelresolution.
+  deltareal /= hres;
+  deltaimag /= vres;
 
   real0 = realmin + deltareal * start;
   for (x = start; x < hres; x += skip)
@@ -96,6 +90,20 @@ void mand_calc(int *image, nint_t realmin, nint_t imagmin, nint_t realmax, nint_
     }
     real0 += deltareal * skip;
   }
+#else
+  // Fractional inrementation does not work well with integers because of the
+  // resolution of the delta being too low. Thus, the outer loop has slightly
+  // more operations in the integer variant than in the double variant.
+  for (x = start; x < hres; x += skip)
+  {
+    real0 = realmin + deltareal * x / hres;
+    for (y = 0; y < vres; y++)
+    {
+      imag0 = imagmax - deltaimag * y / vres;
+      *(image + x + hres * (vres - y - 1)) = iterate(real0, imag0);
+    }
+  }
+#endif
 }
 
 
@@ -235,32 +243,6 @@ void usage(const char *s)
 }
 
 
-static void check_bbox(double bbox[], int hres, int vres)
-{
-#ifndef USE_DOUBLE
-   int m = 0;
-   int x = fabs(bbox[2] - bbox[0]) * NORM_FACT;
-   int y = fabs(bbox[3] - bbox[1]) * NORM_FACT;
-
-   if (x < hres)
-   {
-      bbox[0] = bbox[2] + (double) hres / NORM_FACT;
-      m++;
-   }
-   if (y < vres)
-   {
-      bbox[1] = bbox[3] + (double) vres / NORM_FACT;
-      m++;
-   }
-   if (m)
-   {
-      fprintf(stderr, "Warning: resolution to low! Increase NORM_BITS or reduce resolution to not more than %dx%d.\n", x, y);
-      fprintf(stderr, "Bbox adapted to %f %f %f %f\n", bbox[0], bbox[1], bbox[2], bbox[3]);
-   }
-#endif
-}
-
-
 int main(int argc, char **argv)
 {
    double bbox[] = {-2.0, -1.2, 0.7, 1.2};   // realmin, imagmin, realmax, imagmax
@@ -332,8 +314,6 @@ int main(int argc, char **argv)
       perror("malloc()");
       return 1;
    }
-
-   check_bbox(bbox, width, height);
 
 #ifdef WITH_TIME
    struct timeval tv0, tv1, tv;
