@@ -24,8 +24,8 @@
  * Compile this program with
  * gcc -Wall -O2 -std=c99 `pkg-config --cflags --libs cairo` -o intfract intfract.c
  *
- * @author Bernhard R. Fischer
- * @version 2015/10/11 (this version)
+ * @author Bernhard R. Fischer, <bf@abenteuerland.at>
+ * @date 2024/10/10
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -84,11 +84,11 @@ void mand_calc(int *image, nint_t realmin, nint_t imagmin, nint_t realmax, nint_
 }
 
 
+static int nthreads_ = NUM_THREADS;
 #ifdef WITH_THREADS
 static int *image_;
 static nint_t realmin_, imagmin_, realmax_, imagmax_;
 static int hres_, vres_;
-static int nthreads_ = NUM_THREADS;
 
 
 void *mand_thread(void *n)
@@ -97,6 +97,29 @@ void *mand_thread(void *n)
    return NULL;
 }
 #endif
+
+
+/*! This function reads the number of CPUs from /proc/cpuinfo and returns it.
+ * @return The function returns the number of processors found in
+ * /proc/cpuinfo. If the file does not exist, -1 is returned. If the file
+ * exists but no processors are found, 0 is returned.
+ */
+int get_ncpu(void)
+{
+   char buf[1024];
+   FILE *cpuinfo;
+   int n;
+
+   if ((cpuinfo = fopen("/proc/cpuinfo", "r")) == NULL)
+      return -1;
+
+   for (n = 0; fgets(buf, sizeof(buf), cpuinfo) != NULL;)
+      if (!strncmp(buf, "processor", 9))
+         n++;
+
+   fclose(cpuinfo);
+   return n;
+}
 
 
 /*! Translate iteration count into an RGB color value.
@@ -192,7 +215,7 @@ void usage(const char *s)
          "    -o <filename> .... Name of output PNG file, \"-\" for stdout.\n"
          "    -x <width> ....... Choose image width (default = %d).\n"
          "    -y <height> ...... Choose image height (default = %d).\n"
-         , s, NUM_COLSET - 1, MAXITERATE, NUM_THREADS, WIDTH, HEIGHT);
+         , s, NUM_COLSET - 1, MAXITERATE, nthreads_, WIDTH, HEIGHT);
 }
 
 
@@ -206,6 +229,10 @@ int main(int argc, char **argv)
 #ifdef WITH_THREADS
    pthread_t fdt[MAX_THREADS];
    int i;
+
+   nthreads_ = get_ncpu();
+   if (nthreads_ <= 0)
+      nthreads_ = NUM_THREADS;
 #endif
 
    while ((n = getopt(argc, argv, "c:hi:n:o:x:y:")) != -1)
@@ -229,9 +256,9 @@ int main(int argc, char **argv)
 
          case 'n':
 #ifdef WITH_THREADS
-            nthreads_ = atoi(optarg);
-            if (nthreads_ <= 1 || nthreads_ > MAX_THREADS)
-               nthreads_ = NUM_THREADS;
+            int nthreads = atoi(optarg);
+            if (nthreads >= 1 || nthreads_ <= MAX_THREADS)
+               nthreads_ = nthreads;
 #else
             fprintf(stderr, "thread support not compiled\n");
 #endif
