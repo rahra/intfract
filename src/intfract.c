@@ -94,13 +94,17 @@ void mand_calc(int *image, nint_t realmin, nint_t imagmin, nint_t realmax, nint_
   // Fractional inrementation does not work well with integers because of the
   // resolution of the delta being too low. Thus, the outer loop has slightly
   // more operations in the integer variant than in the double variant.
+  int col;
   for (x = start; x < hres; x += skip)
   {
     real0 = realmin + deltareal * x / hres;
-    for (y = 0; y < vres; y++)
+    for (y = 0; y < vres;)
     {
       imag0 = imagmax - deltaimag * y / vres;
-      *(image + x + hres * (vres - y - 1)) = iterate(real0, imag0);
+      col = iterate(real0, imag0);
+      // fill all pixels which are below int resolution with the same iteration value
+      for (int _y = 0; y < vres && deltaimag * _y < vres; _y++, y++)
+         *(image + x + hres * (vres - y - 1)) = col;
     }
   }
 #endif
