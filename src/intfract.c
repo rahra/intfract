@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <math.h>
 #include <cairo.h>
 #ifdef WITH_TIME
 #include <sys/time.h>
@@ -52,6 +53,20 @@ int maxiterate_ = MAXITERATE;
 static int colset_ = 0;
 
 
+/*! This function is a "rounding" integer division of nint_t is defined to be
+ * an integer (i.e. USE_DOUBLE is not defined).
+ */
+nint_t rdiv(nint_t n, nint_t d)
+{
+#ifdef USE_DOUBLE
+   return n / d;
+#else
+   // rounding integer division
+   return (n < 0) == (d < 0) ? (n + d /2) / d : (n - d / 2) / d;
+#endif
+}
+
+
 /*! This function contains the outer loop, i.e. calculate the coordinates
  * within the complex plane for each pixel and then call iterate().
  * @param image Pointer to image array of size hres * vres elements.
@@ -67,8 +82,8 @@ void mand_calc(int *image, nint_t realmin, nint_t imagmin, nint_t realmax, nint_
   nint_t deltareal, deltaimag, real0,  imag0;
   int x, y;
 
-  deltareal = (realmax - realmin) / hres;
-  deltaimag = (imagmax - imagmin) / vres;
+  deltareal = rdiv(realmax - realmin, hres);
+  deltaimag = rdiv(imagmax - imagmin, vres);
 
   real0 = realmin + deltareal * start;
   for (x = start; x < hres; x += skip)
@@ -220,6 +235,32 @@ void usage(const char *s)
 }
 
 
+static void check_bbox(double bbox[], int hres, int vres)
+{
+#ifndef USE_DOUBLE
+   int m = 0;
+   int x = fabs(bbox[2] - bbox[0]) * NORM_FACT;
+   int y = fabs(bbox[3] - bbox[1]) * NORM_FACT;
+
+   if (x < hres)
+   {
+      bbox[0] = bbox[2] + (double) hres / NORM_FACT;
+      m++;
+   }
+   if (y < vres)
+   {
+      bbox[1] = bbox[3] + (double) vres / NORM_FACT;
+      m++;
+   }
+   if (m)
+   {
+      fprintf(stderr, "Warning: resolution to low! Increase NORM_BITS or reduce resolution to not more than %dx%d.\n", x, y);
+      fprintf(stderr, "Bbox adapted to %f %f %f %f\n", bbox[0], bbox[1], bbox[2], bbox[3]);
+   }
+#endif
+}
+
+
 int main(int argc, char **argv)
 {
    double bbox[] = {-2.0, -1.2, 0.7, 1.2};   // realmin, imagmin, realmax, imagmax
@@ -291,6 +332,8 @@ int main(int argc, char **argv)
       perror("malloc()");
       return 1;
    }
+
+   check_bbox(bbox, width, height);
 
 #ifdef WITH_TIME
    struct timeval tv0, tv1, tv;
