@@ -80,30 +80,26 @@ iterate:
    imul  %rax                 // realq = real * real
    shrd  $NORM_BITS,%rdx,%rax // imagq >>= NORM_BITS
    mov   %rax,REALQ(%rbp)
-
-   mov   %r9,%rdx             // %rdx = imagq
 #else
    mov   REAL(%rbp),%rax
    imul  %rax,%rax            // realq = real * real
    sar   $NORM_BITS,%rax      // realq >> NORM_BITS
    mov   %rax,REALQ(%rbp)
 
-   mov   IMAG(%rbp),%rdx
-   imul  %rdx,%rdx            // imagq = imag * imag
-   sar   $NORM_BITS,%rdx      // imagq >> NORM_BITS
+   mov   IMAG(%rbp),%r9
+   imul  %r9,%r9              // imagq = imag * imag
+   sar   $NORM_BITS,%r9       // imagq >> NORM_BITS
 #endif
    
-   add   %rdx,%rax            // realq + imagq
+   add   %r9,%rax             // realq + imagq
    cmp   %r8,%rax             // > 4 * NORM_FACT ?
    jg    .Litbrk
    
    mov   REAL(%rbp),%rax
 #ifdef WITH_IMUL128
-   mov   %rdx,%r9             // save %rdx
    mov   IMAG(%rbp),%rdx
    imul  %rdx                 // real * imag
    shrd  $(NORM_BITS - 1),%rdx,%rax // imagq >>= NORM_BITS
-   mov   %r9,%rdx             //restore %rdx
 #else
    imul  IMAG(%rbp),%rax      // real * imag
    sar   $(NORM_BITS - 1),%rax// >>= NORM_BITS - 1
@@ -112,7 +108,7 @@ iterate:
    mov   %rax,IMAG(%rbp)
 
    mov   REALQ(%rbp),%rax
-   sub   %rdx,%rax            // realq * imagq
+   sub   %r9,%rax             // realq * imagq
    add   %rdi,%rax            // + real0
    mov   %rax,REAL(%rbp)
 
