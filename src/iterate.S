@@ -135,22 +135,22 @@ iterate:
 
 #ifdef WITH_IMUL128
    mov   %r8,%rax
-   imul  %r8
-   shrd  $NORM_BITS,%rdx,%rax
+   imul  %r8                  // realq = real * real
+   shrd  $NORM_BITS,%rdx,%rax // realq >>= NORM_BITS
    mov   %rax,%r10
 
    mov   %r9,%rax
-   imul  %r9
-   shrd  $NORM_BITS,%rdx,%rax
+   imul  %r9                  // imagq = imag * imag
+   shrd  $NORM_BITS,%rdx,%rax // imagq >>= NORM_BITS
    mov   %rax,%r11
 #else
    mov   %r8,%r10
    imul  %r10,%r10            // realq = real * real
-   sar   $NORM_BITS,%r10      // realq >>= 13
+   sar   $NORM_BITS,%r10      // realq >>= NORM_BITS
 
    mov   %r9,%r11
    imul  %r11,%r11            // imagq = imag * imag
-   sar   $NORM_BITS,%r11      // imagq >>= 13
+   sar   $NORM_BITS,%r11      // imagq >>= NORM_BITS
 #endif
 
    lea   (%r10,%r11),%rax     // realq + imagq
@@ -163,8 +163,8 @@ iterate:
 
 #ifdef WITH_IMUL128
    mov   %r9,%rax
-   imul  %r8
-   shrd  $(NORM_BITS - 1),%rdx,%rax
+   imul  %r8                  // imag *= real
+   shrd  $(NORM_BITS - 1),%rdx,%rax // imag >>= NORM_BITS -1
    mov   %rax,%r9
 #else
    imul  %r8,%r9              // imag *= real
@@ -172,8 +172,8 @@ iterate:
 #endif
    add   %rsi,%r9             // imag += imag0
 
-   sub   %r11,%r10            // realq - imagq
-   lea   (%rdi,%r10),%r8
+   sub   %r11,%r10            // %r10 = realq - imagq
+   lea   (%rdi,%r10),%r8      // real = real0 + %r10
    
    dec   %ecx
    jne   .Litloop
