@@ -54,9 +54,19 @@ typedef double nint_t;
 typedef long nint_t;
 #define NORM_FACT ((nint_t)1 << NORM_BITS)
 #endif
-//! The max number of bits b be depends on the machines word size n which is
-//! about b = n / 2 - 2. So if long int is 64 bits wide b = 64 / 2 - 2 = 30.
-#define NORM_BITS 30
+/*! The max number of bits b be depends on the machines word size n. This code
+ * is written to work with a 64 bit word size (x86_64) and would need adaption
+ * for different architectures.
+ */
+#ifdef WITH_IMUL128
+//! In multiprecision imul (128 bit) 50 bit seems to be the maximum.
+#define NORM_BITS 50
+#else
+/*! If single precision imul (64 bit) is used it will overflow earlier, thus a
+ * lower normalization factor must be used. 29 seems to be the maximum.
+ */
+#define NORM_BITS 29
+#endif
 #endif
 
 #ifndef __ASSEMBLER__
