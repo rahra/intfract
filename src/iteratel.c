@@ -38,13 +38,31 @@ int iterate(nint_t real0, nint_t imag0)
    imag = imag0;
    for (i = 0; i < maxiterate_; i++)
    {
+#ifdef WITH_IMUL128
+      realq = isq128(real);
+      imagq = isq128(imag);
+#elif defined(WITH_INT128_T)
+      __int128_t res;
+      res = real * real;
+      realq = res >> NORM_BITS;
+      res = imag * imag;
+      imagq = res >> NORM_BITS;
+#else
      realq = (real * real) >> NORM_BITS;
      imagq = (imag * imag) >> NORM_BITS;
+#endif
 
      if ((realq + imagq) > (nint_t) 4 * NORM_FACT)
         break;
 
+#ifdef WITH_IMUL128
+      imag = imul128(real, imag) + imag0;
+#elif defined(WITH_INT128_T)
+      res = real * imag;
+      imag = (res >> (NORM_BITS - 1)) + imag0;
+#else
      imag = ((real * imag) >> (NORM_BITS - 1)) + imag0;
+#endif
      real = realq - imagq + real0;
    }
    return i;
