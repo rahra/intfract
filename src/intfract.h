@@ -63,10 +63,6 @@ typedef long nint_t;
 // prototype for iterate()
 int iterate(nint_t real0, nint_t imag0);
 extern int maxiterate_;
-#ifdef WITH_IMUL128
-long imul128(long, long);
-long isq128(long);
-#endif
 #endif
 
 #endif

@@ -25,7 +25,7 @@
 //! Define to use a double precision multiplication implemented in assembler
 //#define WITH_IMUL128
 
-//! Alternativele implement int with gcc's __int128_t type
+//! Alternativele implement int with gcc's __int128_t type which will cause the single-operand variant of imul being used, yielding a 128 bit result.
 //#define WITH_INT128_T
 
 //! Define to compile with assembler iterate() function.
