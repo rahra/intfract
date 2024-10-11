@@ -22,7 +22,7 @@
  * programming and reverse engineering.
  *
  * @author Bernhard R. Fischer
- * @version 2016/01/14
+ * @version 2024/10/11
  */
 
 #include "intfract.h"
@@ -119,7 +119,12 @@ iterate:
 #else
 
    /***** function body *****/
+#ifdef WITH_IMUL128
+   push  %rbx
+   mov   $(4 * NORM_FACT),%rbx
+#else
    mov   $(4 * NORM_FACT),%rdx
+#endif
    mov   %rdi,%r8             // real = real0
    mov   %rsi,%r9             // imag = imag0
 
@@ -128,6 +133,17 @@ iterate:
    .align 16
 .Litloop:
 
+#ifdef WITH_IMUL128
+   mov   %r8,%rax
+   imul  %r8
+   shrd  $NORM_BITS,%rdx,%rax
+   mov   %rax,%r10
+
+   mov   %r9,%rax
+   imul  %r9
+   shrd  $NORM_BITS,%rdx,%rax
+   mov   %rax,%r11
+#else
    mov   %r8,%r10
    imul  %r10,%r10            // realq = real * real
    sar   $NORM_BITS,%r10      // realq >>= 13
@@ -135,13 +151,25 @@ iterate:
    mov   %r9,%r11
    imul  %r11,%r11            // imagq = imag * imag
    sar   $NORM_BITS,%r11      // imagq >>= 13
+#endif
 
-   lea   (%r10,%r11),%rax
+   lea   (%r10,%r11),%rax     // realq + imagq
+#ifdef WITH_IMUL128
+   cmp   %rbx,%rax            // > 4 * NORM_FACT ?
+#else
    cmp   %rdx,%rax            // > 4 * NORM_FACT ?
+#endif
    jg    .Litbrk
 
+#ifdef WITH_IMUL128
+   mov   %r9,%rax
+   imul  %r8
+   shrd  $(NORM_BITS - 1),%rdx,%rax
+   mov   %rax,%r9
+#else
    imul  %r8,%r9              // imag *= real
    sar   $(NORM_BITS - 1),%r9 // imag >>= NORM_BITS - 1
+#endif
    add   %rsi,%r9             // imag += imag0
 
    sub   %r11,%r10            // realq - imagq
@@ -156,6 +184,9 @@ iterate:
    mov   maxiterate_(%rip),%eax
    sub   %ecx,%eax
 
+#ifdef WITH_IMUL128
+   pop   %rbx
+#endif
    ret
 
 #endif // !CONSERVATIVE

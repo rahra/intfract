@@ -17,16 +17,16 @@
 
 /* \file config.h
  * This file contains basic config macros.
+ *
+ * \author Bernhard R. Fischer, <bf@abenteuerland.at>
+ * \date 2024/10/11
  */
 
 //! Define to compile with thread support.
 #define WITH_THREADS
 
-//! Define to use a double precision multiplication implemented in assembler
-//#define WITH_IMUL128
-
-//! Alternativele implement int with gcc's __int128_t type which will cause the single-operand variant of imul being used, yielding a 128 bit result.
-//#define WITH_INT128_T
+//! Define to use a double precision multiplication implemented in assembler, this is the single-operand variant of imul. This uses slightly more instructions.
+#define WITH_IMUL128
 
 //! Define to compile with assembler iterate() function.
 #define ASM_ITERATE

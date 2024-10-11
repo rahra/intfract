@@ -38,7 +38,7 @@ int iterate(nint_t real0, nint_t imag0)
    imag = imag0;
    for (i = 0; i < maxiterate_; i++)
    {
-#ifdef WITH_INT128_T
+#ifdef WITH_IMUL128
       realq = ((__int128_t) real * real) >> NORM_BITS;
       imagq = ((__int128_t) imag * imag) >> NORM_BITS;
 #else
@@ -49,7 +49,7 @@ int iterate(nint_t real0, nint_t imag0)
      if ((realq + imagq) > (nint_t) 4 * NORM_FACT)
         break;
 
-#ifdef WITH_INT128_T
+#ifdef WITH_IMUL128
       imag = (((__int128_t) real * imag) >> (NORM_BITS - 1)) + imag0;
 #else
      imag = ((real * imag) >> (NORM_BITS - 1)) + imag0;
