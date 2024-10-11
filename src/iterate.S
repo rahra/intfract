@@ -66,25 +66,26 @@ iterate:
 
 /***** function body *****/
    movzx maxiterate_(%rip),%rcx
+   mov   $(4 * NORM_FACT),%r8
 
 .Litloop:
 
    mov   REAL(%rbp),%rax
    imul  %rax,%rax            // realq = real * real
-   sar   $NORM_BITS,%rax      // realq >> 13
+   sar   $NORM_BITS,%rax      // realq >> NORM_BITS
    mov   %rax,REALQ(%rbp)
 
    mov   IMAG(%rbp),%rdx
    imul  %rdx,%rdx            // imagq = imag * imag
-   sar   $NORM_BITS,%rdx      // imagq >> 13
+   sar   $NORM_BITS,%rdx      // imagq >> NORM_BITS
    
    add   %rdx,%rax            // realq + imagq
-   cmp   $32768,%rax
+   cmp   %r8,%rax             // > 4 * NORM_FACT ?
    jg    .Litbrk
    
    mov   REAL(%rbp),%rax
    imul  IMAG(%rbp),%rax      // real * imag
-   sar   $(NORM_BITS - 1),%rax// >> 12
+   sar   $(NORM_BITS - 1),%rax// >>= NORM_BITS - 1
    add   %rsi,%rax            // + imag0
    mov   %rax,IMAG(%rbp)
 
