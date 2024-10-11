@@ -70,6 +70,19 @@ iterate:
 
 .Litloop:
 
+#ifdef WITH_IMUL128
+   mov   IMAG(%rbp),%rax
+   imul  %rax                 // imagq = imag * imag
+   shrd  $NORM_BITS,%rdx,%rax // imagq >>= NORM_BITS
+   mov   %rax,%r9
+
+   mov   REAL(%rbp),%rax
+   imul  %rax                 // realq = real * real
+   shrd  $NORM_BITS,%rdx,%rax // imagq >>= NORM_BITS
+   mov   %rax,REALQ(%rbp)
+
+   mov   %r9,%rdx             // %rdx = imagq
+#else
    mov   REAL(%rbp),%rax
    imul  %rax,%rax            // realq = real * real
    sar   $NORM_BITS,%rax      // realq >> NORM_BITS
@@ -78,14 +91,23 @@ iterate:
    mov   IMAG(%rbp),%rdx
    imul  %rdx,%rdx            // imagq = imag * imag
    sar   $NORM_BITS,%rdx      // imagq >> NORM_BITS
+#endif
    
    add   %rdx,%rax            // realq + imagq
    cmp   %r8,%rax             // > 4 * NORM_FACT ?
    jg    .Litbrk
    
    mov   REAL(%rbp),%rax
+#ifdef WITH_IMUL128
+   mov   %rdx,%r9             // save %rdx
+   mov   IMAG(%rbp),%rdx
+   imul  %rdx                 // real * imag
+   shrd  $(NORM_BITS - 1),%rdx,%rax // imagq >>= NORM_BITS
+   mov   %r9,%rdx             //restore %rdx
+#else
    imul  IMAG(%rbp),%rax      // real * imag
    sar   $(NORM_BITS - 1),%rax// >>= NORM_BITS - 1
+#endif
    add   %rsi,%rax            // + imag0
    mov   %rax,IMAG(%rbp)
 
