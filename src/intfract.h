@@ -32,7 +32,7 @@
 #endif
 
 #if defined(ASM_ITERATE) && defined(USE_DOUBLE)
-#error you cannot define ASM_ITERATE and USE_DOUBLE
+#error you cannot define ASM_ITERATE and USE_DOUBLE at the same time
 #endif
 
 // maximum number of iterations of the inner loop
@@ -73,6 +73,10 @@ typedef long nint_t;
 // prototype for iterate()
 int iterate(nint_t real0, nint_t imag0);
 extern int maxiterate_;
+
+/* from imul128.S */
+nint_t sqr128shr(nint_t a);
+nint_t imul128shr(nint_t a, nint_t b);
 #endif
 
 #endif
