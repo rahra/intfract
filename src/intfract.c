@@ -1,4 +1,4 @@
-/* Copyright 2015-2024 Bernhard R. Fischer, 4096R/8E24F29D <bf@abenteuerland.at>
+/* Copyright 2015-2025 Bernhard R. Fischer, 4096R/8E24F29D <bf@abenteuerland.at>
  *
  * IntFract is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
  * gcc -Wall -O2 -std=c99 `pkg-config --cflags --libs cairo` -o intfract intfract.c
  *
  * @author Bernhard R. Fischer, <bf@abenteuerland.at>
- * @date 2024/10/10
+ * @date 2025/07/25
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -262,10 +262,10 @@ int main(int argc, char **argv)
    int *image;                               // raw pixel data
    int n;
    char *out = "intfract.png";
+   int cc = 0;
 #ifdef WITH_THREADS
    pthread_t fdt[MAX_THREADS];
    int i;
-   int cc = 0;
 
    nthreads_ = get_ncpu();
    if (nthreads_ <= 0)
