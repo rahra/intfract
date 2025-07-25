@@ -47,6 +47,7 @@ sqr128shr:
  * %rax           %rdi   %rsi
  * This function returns (int64_t) (((int128_t) a * b) >> NORMBITS - 1)  where a and b are of type int64_t.
  */
+   .align 16
    .global imul128shr
 imul128shr:
    mov   %rsi,%rax
