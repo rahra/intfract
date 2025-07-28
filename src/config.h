@@ -19,32 +19,17 @@
  * This file contains basic config macros.
  *
  * \author Bernhard R. Fischer, <bf@abenteuerland.at>
- * \date 2025/07/25
+ * \date 2025/07/28
  */
 
 //! Define to compile with thread support.
 #define WITH_THREADS
-
-//! Define to use a double precision multiplication implemented in assembler, this is the single-operand variant of imul. This uses slightly more instructions. It will also be used in the C variante of iterate() unless the following macro GCCMUL128 is defined.
-#define WITH_IMUL128
-
-//! Define this to use a pure but sub-optimal C implementation of the 128 bit multiplication.
-//#define GCCMUL128
 
 //! Define to compile with assembler iterate() function.
 #define ASM_ITERATE
 
 //! Define to use double (floating point operations), otherwise integer arithmetics is used.
 //#define USE_DOUBLE
-
-//! Define to use conservative stack-variable-solution. This is only effective if ASM_ITERATE is defined.
-//#define CONSERVATIVE
-
-//! Define to use instruction "enter" for function prolog. This is only effective if CONSERVATIVE is defined.
-//#define WITH_ENTER
-
-//! Define to use instruction "leave" for function epilog. This is only effective if CONSERVATIVE is defined.
-//#define WITH_LEAVE
 
 #endif
 

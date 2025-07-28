@@ -8,7 +8,7 @@ LDFLAGS =
 
 all: intfract
 
-intfract: intfract.o iterate.o iteratel.o iterated.o imul128.o
+intfract: intfract.o iterate.o iteratel.o iterated.o
 
 intfract.o: intfract.c
 
@@ -17,8 +17,6 @@ intfractl.o: intfractl.c
 intfractd.o: intfractd.c
 
 iterate.o: iterate.S
-
-imul128.o: imul128.S
 
 clean:
 	rm -f *.o intfract

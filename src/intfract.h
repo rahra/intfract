@@ -1,6 +1,6 @@
 #ifndef INTFRACT_H
 #define INTFRACT_H
-/* Copyright 2015-2024 Bernhard R. Fischer, 4096R/8E24F29D <bf@abenteuerland.at>
+/* Copyright 2015-2025 Bernhard R. Fischer, 4096R/8E24F29D <bf@abenteuerland.at>
  *
  * IntFract is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,9 @@
 
 /* \file intfract.h
  * This file contains some definitions.
+ *
+ * @author Bernhard R. Fischer, <bf@abenteuerland.at>
+ * @date 2025/07/28
  */
 
 #include "config.h"
@@ -58,14 +61,11 @@ typedef long nint_t;
  * is written to work with a 64 bit word size (x86_64) and would need adaption
  * for different architectures.
  */
-#ifdef WITH_IMUL128
-//! In multiprecision imul (128 bit) 50 bit seems to be the maximum.
+//! Number of bits to normalize values. This must be an even number!
 #define NORM_BITS 50
-#else
-/*! If single precision imul (64 bit) is used it will overflow earlier, thus a
- * lower normalization factor must be used. 29 seems to be the maximum.
- */
-#define NORM_BITS 29
+// safety check for NORM_BITS
+#if NORM_BITS & 1
+#error NORM_BITS must be an even number!
 #endif
 #endif
 
@@ -73,10 +73,6 @@ typedef long nint_t;
 // prototype for iterate()
 int iterate(nint_t real0, nint_t imag0);
 extern int maxiterate_;
-
-/* from imul128.S */
-nint_t sqr128shr(nint_t a);
-nint_t imul128shr(nint_t a, nint_t b);
 #endif
 
 #endif

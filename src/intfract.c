@@ -25,7 +25,7 @@
  * gcc -Wall -O2 -std=c99 `pkg-config --cflags --libs cairo` -o intfract intfract.c
  *
  * @author Bernhard R. Fischer, <bf@abenteuerland.at>
- * @date 2025/07/25
+ * @date 2025/07/28
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -234,7 +234,7 @@ void cairo_save_image(const int *image, int hres, int vres, const char *s)
 
 void usage(const char *s)
 {
-   printf("intfract v2.1 © 2015-2024 Bernhard R. Fischer, <bf@abenteuerland.at>\n"
+   printf("intfract v3.0 © 2015-2025 Bernhard R. Fischer, <bf@abenteuerland.at>\n"
          "usage: %s [options] [realmin(x0)] [imagmin(y0)] [realmax(x1)] [imagmax(y1)]\n"
          "    -C ............... Coordinates are given as x/y and w/h instead of x0/y0 and x1/y1.\n"
          "    -c <colset> ...... Choose color set: 0 - %d\n"
@@ -251,6 +251,12 @@ void usage(const char *s)
 #endif
 #ifdef ASM_ITERATE
    printf("    ASM_ITERATE is defined\n");
+#endif
+#ifdef WITH_THREADS
+   printf("    WITH_THREADS is defined\n");
+#endif
+#ifdef WITH_TIME
+   printf("    WITH_TIME is defined\n");
 #endif
 }
 
