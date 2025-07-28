@@ -61,8 +61,10 @@ typedef long nint_t;
  * is written to work with a 64 bit word size (x86_64) and would need adaption
  * for different architectures.
  */
+#ifndef NORM_BITS
 //! Number of bits to normalize values. This must be an even number!
 #define NORM_BITS 50
+#endif
 // safety check for NORM_BITS
 #if NORM_BITS & 1
 #error NORM_BITS must be an even number!

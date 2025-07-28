@@ -1,8 +1,7 @@
 CC = gcc
 CAIRO_CFLAGS = $(shell pkg-config --cflags cairo)
 CAIRO_LDFLAGS = $(shell pkg-config --libs cairo)
-CFLAGS = -O2 -g -Wall -std=gnu99 -DWITH_TIME $(CAIRO_CFLAGS)
-ASFLAGS =
+CFLAGS += -O2 -g -Wall -std=gnu99 -DWITH_TIME $(CAIRO_CFLAGS)
 LDLIBS = -lm $(CAIRO_LDFLAGS) -lpthread
 LDFLAGS =
 
@@ -17,6 +16,7 @@ intfractl.o: intfractl.c
 intfractd.o: intfractd.c
 
 iterate.o: iterate.S
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
 	rm -f *.o intfract
