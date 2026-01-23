@@ -1,4 +1,4 @@
-/* Copyright 2015-2025 Bernhard R. Fischer, 4096R/8E24F29D <bf@abenteuerland.at>
+/* Copyright 2015-2026 Bernhard R. Fischer, 4096R/8E24F29D <bf@abenteuerland.at>
  *
  * IntFract is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
  * gcc -Wall -O2 -std=c99 `pkg-config --cflags --libs cairo` -o intfract intfract.c
  *
  * @author Bernhard R. Fischer, <bf@abenteuerland.at>
- * @date 2025/07/28
+ * @date 2026/01/23
  */
 #include <stdio.h>
 #include <stdlib.h>
