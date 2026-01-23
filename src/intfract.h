@@ -42,8 +42,6 @@
 #define MAXITERATE 64
 
 
-#define IT8(x) ((x) * 255 / maxiterate_)
-
 #ifdef USE_DOUBLE
 #ifndef __ASSEMBLER__
 typedef double nint_t;

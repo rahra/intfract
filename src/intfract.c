@@ -42,15 +42,14 @@
 #endif
 
 #include "intfract.h"
+#include "gcolor.h"
 
 #define WIDTH 1920
 #define HEIGHT 1080
 
-enum {COLSET_RED, COLSET_GREEN_BLUE, COLSET_RED_YELLOW, COLSET_BLUE, COLSET_BLACK_WHITE, NUM_COLSET};
-
 
 int maxiterate_ = MAXITERATE;
-static int colset_ = 0;
+int colset_ = 0;
 
 
 /*! This function contains the outer loop, i.e. calculate the coordinates
@@ -149,35 +148,6 @@ int get_ncpu(void)
 }
 
 
-/*! Translate iteration count into an RGB color value.
- * @param itcnt Number of iterations.
- * @return Returns an RGB color value. If itcnt is greater or equal to
- * maxiterate_, 0 is returned (which is black).
- */
-int fract_color(unsigned int itcnt)
-{
-   switch (colset_)
-   {
-      // red color set
-      default:
-      case COLSET_RED:
-         return itcnt >= maxiterate_ ? 0 : IT8(itcnt) << 17;
-      // green and blue color set
-      case COLSET_GREEN_BLUE:
-         return itcnt >= maxiterate_ ? 0 : (IT8(itcnt) << 1) | ((256 + IT8(itcnt)) << 10);
-      // red and yellow color set
-      case COLSET_RED_YELLOW:
-         return itcnt >= maxiterate_ ? 0 : (IT8(itcnt) << 17) | ((256 + IT8(itcnt)) << 10);
-      // blue only
-      case COLSET_BLUE:
-         return itcnt >= maxiterate_ ? 0 : IT8(itcnt);
-      // black white color set
-      case COLSET_BLACK_WHITE:
-         return (itcnt & 1) * 0xffffff;
-   }
-}
-
-
 static cairo_status_t cairo_write(void *closure, const unsigned char *data, unsigned int length)
 {
    return fwrite(data, length, 1, closure) ? CAIRO_STATUS_SUCCESS : CAIRO_STATUS_WRITE_ERROR;
@@ -222,7 +192,7 @@ void cairo_save_image(const int *image, int hres, int vres, const char *s)
    for (y = 0; y < vres; y++, pdata += stride)
       for (x = 0; x < hres; x++, image++)
          // translate iteration counter into pixel color
-         *((int*) pdata + x) = fract_color(*image);
+         *((int*) pdata + x) = fract_gcolor(*image);
 
    cairo_surface_mark_dirty(sfc);
    cairo_surface_write_to_png_stream(sfc, cairo_write, f);
@@ -244,7 +214,7 @@ void usage(const char *s)
          "    -o <filename> .... Name of output PNG file, \"-\" for stdout.\n"
          "    -x <width> ....... Choose image width (default = %d).\n"
          "    -y <height> ...... Choose image height (default = %d).\n"
-         , s, NUM_COLSET - 1, MAXITERATE, nthreads_, WIDTH, HEIGHT);
+         , s, num_colsets(), MAXITERATE, nthreads_, WIDTH, HEIGHT);
    printf("\n    defs: sizeof(nint_t) = %ld, NORM_BITS = %d, NORM_FACT = %ld\n", sizeof(nint_t), NORM_BITS, NORM_FACT);
 #ifdef USE_DOUBLE
    printf("    USE_DOUBLE is defined\n");
@@ -291,7 +261,7 @@ int main(int argc, char **argv)
 
          case 'c':
             colset_ = atoi(optarg);
-            if (colset_ < 0 || colset_ >= NUM_COLSET)
+            if (colset_ < 0 || colset_ > num_colsets())
                colset_ = 0;
             break;
 

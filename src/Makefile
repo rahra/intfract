@@ -7,7 +7,7 @@ LDFLAGS =
 
 all: intfract
 
-intfract: intfract.o iterate.o iteratel.o iterated.o
+intfract: intfract.o iterate.o iteratel.o iterated.o gcolor.o
 
 intfract.o: intfract.c
 
@@ -17,6 +17,8 @@ intfractd.o: intfractd.c
 
 iterate.o: iterate.S
 	$(CC) $(CFLAGS) -c -o $@ $<
+
+gcolor.o: gcolor.c gcolor.h
 
 clean:
 	rm -f *.o intfract
