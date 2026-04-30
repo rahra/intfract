@@ -206,9 +206,11 @@ void usage(const char *s)
 {
    printf("intfract v3.0 © 2015-2025 Bernhard R. Fischer, <bf@abenteuerland.at>\n"
          "usage: %s [options] [realmin(x0)] [imagmin(y0)] [realmax(x1)] [imagmax(y1)]\n"
+         "    -b <color> ....... Set background color in HTML format (#aarrggbb). Default = #000000\n"
          "    -C ............... Coordinates are given as x/y and w/h instead of x0/y0 and x1/y1.\n"
          "    -c <colset> ...... Choose color set: 0 - %d\n"
          "    -h ............... Display this help screen.\n"
+         "    -I ............... Invert color set.\n"
          "    -i <n> ........... Set maximum number of iterations (default = %d).\n"
          "    -n <threads> ..... Choose number of threads (default = %d).\n"
          "    -o <filename> .... Name of output PNG file, \"-\" for stdout.\n"
@@ -248,12 +250,17 @@ int main(int argc, char **argv)
       nthreads_ = NUM_THREADS;
 #endif
 
-   while ((n = getopt(argc, argv, "Cc:hi:n:o:x:y:")) != -1)
+   while ((n = getopt(argc, argv, "b:Cc:hIi:n:o:x:y:")) != -1)
       switch (n)
       {
          case 'h':
             usage(argv[0]);
             exit(EXIT_SUCCESS);
+
+         case 'b':
+            if (set_bgcolor(optarg) < 0)
+               fprintf(stderr, "*** illegal color code '%s'!\n", optarg), exit(1);
+            break;
 
          case 'C':
             cc = 1;
@@ -263,6 +270,10 @@ int main(int argc, char **argv)
             colset_ = atoi(optarg);
             if (colset_ < 0 || colset_ > num_colsets())
                colset_ = 0;
+            break;
+
+         case 'I':
+            inv_colset();
             break;
 
          case 'i':

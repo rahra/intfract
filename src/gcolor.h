@@ -17,7 +17,7 @@
  * This file contains the declarations for gcolor.c
  *
  * \author Bernhard R. Fischer, <bf@abenteuerland.at>
- * \date 2026/01/23
+ * \date 2026/01/24
  */
 
 #ifndef GCOLOR_H
@@ -29,5 +29,7 @@ extern int colset_;
 
 int num_colsets(void);
 int fract_gcolor(unsigned int);
+int set_bgcolor(const char*);
+void inv_colset(void);
 
 #endif

@@ -18,15 +18,21 @@
  * convert the iteration count returned by iterate() into a color value.
  *
  * \author Bernhard R. Fischer, <bf@abenteuerland.at>
- * \date 2026/01/23
+ * \date 2026/01/24
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <ctype.h>
 
 #include "intfract.h"
 #include "gcolor.h"
+
+
+//! default background color
+static int bgcolor_ = 0;
+static int asc_ = 1;
 
 
 typedef struct col_gradient
@@ -51,8 +57,15 @@ static col_gradient_t g_gb_[] =
    {0.0, 1.0, 1.0, 1.00}
 };
 
-
 static col_gradient_t g_ry_[] =
+{
+   {0.0, 0.0, 0.0, 0.00},
+   {1.0, 0.0, 0.0, 0.25},
+   {1.0, 1.0, 0.0, 0.50},
+   {1.0, 0.0, 0.0, 1.00},
+};
+
+static col_gradient_t g_gy_[] =
 {
    {0.0, 0.0, 0.0, 0.00},
    {0.5, 1.0, 0.0, 0.25},
@@ -90,6 +103,12 @@ static col_gradient_t g_rvg2_[] =
    {0.439, 0.016, 0.737, 0.6},    // #7004bc violett
    {0.961, 0.106, 0.129, 1.0}  // #f51b3d red
 };
+static col_gradient_t g_bw_[] =
+{
+   {0.0, 0.0, 0.0, 0.0},
+   {1.0, 1.0, 1.0, 1.0}
+};
+
 static col_gradient_t *g_list_[] = 
 {
    g_r_,
@@ -99,8 +118,48 @@ static col_gradient_t *g_list_[] =
    g_rb_,
    g_rvg_,
    g_rvg2_,
+   g_gy_,
+   g_bw_,
    NULL
 };
+
+
+/*! Invert order of color set from ascending to descending.
+ */
+void inv_colset(void)
+{
+   asc_ = 0;
+}
+
+
+/*! Parse string and set background color.
+ * @param cstr Color string in HTML format #aarrggbb where the transparency is
+ * defined between 0x00 and 0x7f.
+ * @return Returns parse color value, or -1 in case of error.
+ */
+int set_bgcolor(const char *cstr)
+{
+   int i;
+
+   if (cstr == NULL || *cstr != '#')
+      return -1;
+
+   for (bgcolor_ = 0, cstr++, i = 0; *cstr != '\0' && i < 8; i++, cstr++)
+   {
+      if (!isxdigit(*cstr))
+         return -1;
+      bgcolor_ <<= 4;
+      if (*cstr >= '0' && *cstr <= '9')
+         bgcolor_ |= *cstr - '0';
+      else if (*cstr >= 'A' && *cstr <= 'F')
+         bgcolor_ |= *cstr - 'A' + 10;
+      else if (*cstr >= 'a' && *cstr <= 'f')
+         bgcolor_ |= *cstr - 'a' + 10;
+   }
+
+   bgcolor_ &= 0x7fffffff;
+   return bgcolor_;
+}
 
 
 /*! Return number of available color sets.
@@ -143,7 +202,7 @@ int fract_gcolor(unsigned int itcnt)
 
    // return black if itcnt is out of range
    if (itcnt >= maxiterate_ || itcnt < 0)
-      return 0;
+      return bgcolor_;
 
    // init color table at 1st function call
    if (_g_cnt < 0)
@@ -190,7 +249,7 @@ int fract_gcolor(unsigned int itcnt)
             r = (cg[1]->r - cg[0]->r) * d + cg[0]->r;
             g = (cg[1]->g - cg[0]->g) * d + cg[0]->g;
             b = (cg[1]->b - cg[0]->b) * d + cg[0]->b;
-            _cg[i] = creg(r) << 16 | creg(g) << 8 | creg(b);
+            _cg[asc_ ? i : maxiterate_ - 1 - i] = creg(r) << 16 | creg(g) << 8 | creg(b);
          }
       }
    }
