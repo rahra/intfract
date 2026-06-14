@@ -42,13 +42,13 @@ typedef struct col_gradient
 } col_gradient_t;
 
 
-static col_gradient_t g_r_[] =
+static const col_gradient_t g_r_[] =
 {
    {0.0, 0.0, 0.0, 0.0},
    {1.0, 0.0, 0.0, 1.0}
 };
 
-static col_gradient_t g_gb_[] =
+static const col_gradient_t g_gb_[] =
 {
    {0.0, 0.0, 0.0, 0.00},
    {0.0, 1.0, 0.5, 0.25},
@@ -57,7 +57,7 @@ static col_gradient_t g_gb_[] =
    {0.0, 1.0, 1.0, 1.00}
 };
 
-static col_gradient_t g_ry_[] =
+static const col_gradient_t g_ry_[] =
 {
    {0.0, 0.0, 0.0, 0.00},
    {1.0, 0.0, 0.0, 0.25},
@@ -65,7 +65,7 @@ static col_gradient_t g_ry_[] =
    {1.0, 0.0, 0.0, 1.00},
 };
 
-static col_gradient_t g_gy_[] =
+static const col_gradient_t g_gy_[] =
 {
    {0.0, 0.0, 0.0, 0.00},
    {0.5, 1.0, 0.0, 0.25},
@@ -74,19 +74,19 @@ static col_gradient_t g_gy_[] =
    {1.0, 1.0, 0.0, 1.00}
 };
 
-static col_gradient_t g_b_[] =
+static const col_gradient_t g_b_[] =
 {
    {0.0, 0.0, 0.0, 0.0},
    {0.0, 0.0, 1.0, 1.0}
 };
 
-static col_gradient_t g_rb_[] =
+static const col_gradient_t g_rb_[] =
 {
    {0.0, 0.0, 0.0, 0.0},
    {1.0, 0.0, 0.0, 0.5},
    {0.0, 0.0, 1.0, 1.0}
 };
-static col_gradient_t g_rvg_[] =
+static const col_gradient_t g_rvg_[] =
 {
    {0.0, 0.0, 0.0, 0.0},
    {0.961, 0.106, 0.129, 0.25},  // #f51b3d red
@@ -94,7 +94,7 @@ static col_gradient_t g_rvg_[] =
    {0.627, 0.957, 0.408, 0.75},  // #a0f468 green
    {0.439, 0.016, 0.737, 1.0}    // #7004bc violett
 };
-static col_gradient_t g_rvg2_[] =
+static const col_gradient_t g_rvg2_[] =
 {
    {0.0, 0.0, 0.0, 0.0},
    {0.961, 0.106, 0.129, 0.2},  // #f51b3d red
@@ -103,13 +103,13 @@ static col_gradient_t g_rvg2_[] =
    {0.439, 0.016, 0.737, 0.6},    // #7004bc violett
    {0.961, 0.106, 0.129, 1.0}  // #f51b3d red
 };
-static col_gradient_t g_bw_[] =
+static const col_gradient_t g_bw_[] =
 {
    {0.0, 0.0, 0.0, 0.0},
    {1.0, 1.0, 1.0, 1.0}
 };
 
-static col_gradient_t *g_list_[] = 
+static const col_gradient_t *g_list_[] =
 {
    g_r_,
    g_gb_,
@@ -233,7 +233,7 @@ int fract_gcolor(unsigned int itcnt)
          goto fc_get;
       }
 
-      col_gradient_t *cg[2];
+      const col_gradient_t *cg[2];
       double r, g, b, d;
       int i, j, k, n;
 
