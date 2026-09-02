@@ -25,7 +25,7 @@
  * gcc -Wall -O2 -std=c99 `pkg-config --cflags --libs cairo` -o intfract intfract.c
  *
  * @author Bernhard R. Fischer, <bf@abenteuerland.at>
- * @date 2026/01/23
+ * @date 2026/09/02
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -50,8 +50,10 @@
 
 int maxiterate_ = MAXITERATE;
 int colset_ = 0;
+int wg_size_ = WG_SIZE;
 
 
+#ifndef USE_OPENCL
 /*! This function contains the outer loop, i.e. calculate the coordinates
  * within the complex plane for each pixel and then call iterate().
  * @param image Pointer to image array of size hres * vres elements.
@@ -108,6 +110,102 @@ void mand_calc(int *image, nint_t realmin, nint_t imagmin, nint_t realmax, nint_
   }
 #endif
 }
+#endif
+
+
+#ifdef USE_OPENCL
+/*! This function contains the outer loop, i.e. calculate the coordinates
+ * within the complex plane for each pixel and then call iterate().
+ * @param image Pointer to image array of size hres * vres elements.
+ * @param realmin Minimun real value of image.
+ * @param imagmin Minimum imaginary value of image.
+ * @param realmax Maximum real value.
+ * @param imagmax Maximum imaginary value.
+ * @param hres Pixel width of image.
+ * @param vres Pixel height of image.
+ * @param ifcl Pointer to initialized if_cl_t structure (defined in intfract.h).
+ */
+void mand_calc(int *image, nint_t realmin, nint_t imagmin, nint_t realmax, nint_t imagmax, int hres, int vres, if_cl_t *ifcl)
+{
+   size_t local_size[2] = {wg_size_, wg_size_}, global_size[2];
+   cl_mem real0, imag0, img;
+   cl_kernel kernel;
+   int err;
+
+   realmax -= realmin;
+   imagmax -= imagmin;
+
+   real0 = clCreateBuffer(ifcl->context, CL_MEM_READ_WRITE, sizeof(nint_t) * hres, NULL, NULL);
+   imag0 = clCreateBuffer(ifcl->context, CL_MEM_READ_WRITE, sizeof(nint_t) * vres, NULL, NULL);
+
+   // create kernel for fractal coordinate calculation
+   if ((kernel = clCreateKernel(ifcl->program, "fract_coords", NULL)) == NULL)
+      fprintf(stderr, "clCreateKernel() failed"), exit(1);
+
+   // calculate fractal real coordinates
+   if (clSetKernelArg(kernel, 0, sizeof(nint_t), &realmin) != CL_SUCCESS)
+      fprintf(stderr, "clSetKernalArg() failed"), exit(1);
+   if (clSetKernelArg(kernel, 1, sizeof(nint_t), &realmax) != CL_SUCCESS)
+      fprintf(stderr, "clSetKernalArg() failed"), exit(1);
+   if (clSetKernelArg(kernel, 2, sizeof(cl_mem), &real0) != CL_SUCCESS)
+      fprintf(stderr, "clSetKernalArg() failed"), exit(1);
+
+   global_size[0] = hres;
+
+   if ((err = clEnqueueNDRangeKernel(ifcl->queue, kernel, 1, NULL, global_size, local_size, 0, NULL, NULL)) != CL_SUCCESS)
+      fprintf(stderr, "clEnqueueNDRangeKernel(real0) failed: %d\n", err), exit(1);
+
+   // calculate fractal imaginary coordinates
+   if (clSetKernelArg(kernel, 0, sizeof(nint_t), &imagmin) != CL_SUCCESS)
+      fprintf(stderr, "clSetKernalArg() failed"), exit(1);
+   if (clSetKernelArg(kernel, 1, sizeof(nint_t), &imagmax) != CL_SUCCESS)
+      fprintf(stderr, "clSetKernalArg() failed"), exit(1);
+   if (clSetKernelArg(kernel, 2, sizeof(cl_mem), &imag0) != CL_SUCCESS)
+      fprintf(stderr, "clSetKernalArg() failed"), exit(1);
+
+   global_size[0] = vres;
+
+   if ((err = clEnqueueNDRangeKernel(ifcl->queue, kernel, 1, NULL, global_size, local_size, 0, NULL, NULL)) != CL_SUCCESS)
+      fprintf(stderr, "clEnqueueNDRangeKernel(imag0) failed: %d\n", err), exit(1);
+
+   clReleaseKernel(kernel);
+
+   // create kernel for inner iteration (the real workload)
+   if ((kernel = clCreateKernel(ifcl->program, "iterate", NULL)) == NULL)
+      fprintf(stderr, "clCreateKernel() failed"), exit(1);
+
+   img = clCreateBuffer(ifcl->context, CL_MEM_WRITE_ONLY, hres * vres * sizeof(int), NULL, NULL);
+
+   if (clSetKernelArg(kernel, 0, sizeof(cl_mem), &real0) != CL_SUCCESS)
+      fprintf(stderr, "clSetKernalArg() failed"), exit(1);
+   if (clSetKernelArg(kernel, 1, sizeof(cl_mem), &imag0) != CL_SUCCESS)
+      fprintf(stderr, "clSetKernalArg() failed"), exit(1);
+   if (clSetKernelArg(kernel, 2, sizeof(int), &maxiterate_) != CL_SUCCESS)
+      fprintf(stderr, "clSetKernalArg() failed"), exit(1);
+   if (clSetKernelArg(kernel, 3, sizeof(cl_mem), &img) != CL_SUCCESS)
+      fprintf(stderr, "clSetKernalArg() failed"), exit(1);
+
+   global_size[0] = hres;
+   global_size[1] = vres;
+
+   if ((err = clEnqueueNDRangeKernel(ifcl->queue, kernel, 2, NULL, global_size, local_size, 0, NULL, NULL)) != CL_SUCCESS)
+      fprintf(stderr, "clEnqueueNDRangeKernel(iterate) failed: %d\n", err), exit(1);
+
+   /* Wait for the command queue to get serviced before reading
+   back results */
+   clFinish(ifcl->queue);
+
+   if (clEnqueueReadBuffer(ifcl->queue, img, CL_TRUE, 0, hres * vres * sizeof(int), image, 0, NULL, NULL) != CL_SUCCESS)
+      fprintf(stderr, "clEnqueueReadBuffer() failed"), exit(1);
+
+
+   /* Deallocate resources */
+   clReleaseKernel(kernel);
+   clReleaseMemObject(real0);
+   clReleaseMemObject(imag0);
+   clReleaseMemObject(img);
+}
+#endif
 
 
 static int nthreads_ = NUM_THREADS;
@@ -214,10 +312,14 @@ void usage(const char *s)
          "    -i <n> ........... Set maximum number of iterations (default = %d).\n"
          "    -n <threads> ..... Choose number of threads (default = %d).\n"
          "    -o <filename> .... Name of output PNG file, \"-\" for stdout.\n"
+         "    -w <wg_size> ..... Define workgroup size of OpenCL device (default = %d).\n"
          "    -x <width> ....... Choose image width (default = %d).\n"
          "    -y <height> ...... Choose image height (default = %d).\n"
-         , s, num_colsets(), MAXITERATE, nthreads_, WIDTH, HEIGHT);
+         , s, num_colsets(), MAXITERATE, nthreads_, WG_SIZE, WIDTH, HEIGHT);
    printf("\n    defs: sizeof(nint_t) = %ld, NORM_BITS = %d, NORM_FACT = %ld\n", sizeof(nint_t), NORM_BITS, NORM_FACT);
+#ifdef USE_OPENCL
+   printf("    USE_OPENCL is defined\n");
+#endif
 #ifdef USE_DOUBLE
    printf("    USE_DOUBLE is defined\n");
 #endif
@@ -241,6 +343,9 @@ int main(int argc, char **argv)
    int n;
    char *out = "intfract.png";
    int cc = 0;
+#ifdef USE_OPENCL
+   if_cl_t *ifcl = prepare_cl();
+#endif
 #ifdef WITH_THREADS
    pthread_t fdt[MAX_THREADS];
    int i;
@@ -249,8 +354,7 @@ int main(int argc, char **argv)
    if (nthreads_ <= 0)
       nthreads_ = NUM_THREADS;
 #endif
-
-   while ((n = getopt(argc, argv, "b:Cc:hIi:n:o:x:y:")) != -1)
+   while ((n = getopt(argc, argv, "b:Cc:hIi:n:o:w:x:y:")) != -1)
       switch (n)
       {
          case 'h':
@@ -296,6 +400,10 @@ int main(int argc, char **argv)
             out = optarg;
             break;
 
+         case 'w':
+            wg_size_ = atoi(optarg);
+            break;
+
          case 'x':
             width = atoi(optarg);
             if (width <= 0)
@@ -324,6 +432,12 @@ int main(int argc, char **argv)
       bbox[1] -= a;
    }
 
+#ifdef USE_OPENCL
+   // adjust image size to workgroup size
+   width = ceil((double) width / wg_size_) * wg_size_;
+   height = ceil((double) height / wg_size_) * wg_size_;
+#endif
+
    if ((image = malloc(width * height * sizeof(*image))) == NULL)
    {
       perror("malloc()");
@@ -350,7 +464,14 @@ int main(int argc, char **argv)
    // call calculation of image
    mand_calc(image,
          bbox[0] * NORM_FACT, bbox[1] * NORM_FACT, bbox[2] * NORM_FACT, bbox[3] * NORM_FACT,
-         width, height, 0, 1);
+         width, height,
+#ifdef USE_OPENCL
+         ifcl
+#else
+         0, 1
+#endif
+         );
+
 #endif
 
 #ifdef WITH_THREADS
@@ -362,6 +483,10 @@ int main(int argc, char **argv)
    gettimeofday(&tv1, NULL);
    timersub(&tv1, &tv0, &tv);
    fprintf(stderr, "%ld.%06ld\n", tv.tv_sec, tv.tv_usec);
+#endif
+
+#ifdef USE_OPENCL
+   release_cl(ifcl);
 #endif
 
    // save image to disk

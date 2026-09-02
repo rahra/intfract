@@ -1,6 +1,6 @@
 #ifndef CONFIG_H
 #define CONFIG_H
-/* Copyright 2024-2025 Bernhard R. Fischer, 4096R/8E24F29D <bf@abenteuerland.at>
+/* Copyright 2024-2026 Bernhard R. Fischer, 4096R/8E24F29D <bf@abenteuerland.at>
  *
  * IntFract is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  * This file contains basic config macros.
  *
  * \author Bernhard R. Fischer, <bf@abenteuerland.at>
- * \date 2025/07/28
+ * \date 2026/09/02
  */
 
 //! Define to compile with thread support.
@@ -30,6 +30,9 @@
 
 //! Define to use double (floating point operations), otherwise integer arithmetics is used.
 //#define USE_DOUBLE
+
+//! Define to use OpenCL (GPU support)
+//#define USE_OPENCL
 
 #endif
 

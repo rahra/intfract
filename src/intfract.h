@@ -19,10 +19,31 @@
  * This file contains some definitions.
  *
  * @author Bernhard R. Fischer, <bf@abenteuerland.at>
- * @date 2026/01/23
+ * @date 2026/09/01
  */
 
 #include "config.h"
+
+#ifdef USE_OPENCL
+#undef WITH_THREADS
+#undef ASM_ITERATE
+#define CL_TARGET_OPENCL_VERSION 300
+#if !defined(__ASSEMBLER__) && !defined(__OPENCL_VERSION__)
+#include <CL/cl.h>
+typedef struct intfract_cl
+{
+   cl_device_id device;
+   cl_context context;
+   cl_program program;
+   cl_command_queue queue;
+} if_cl_t;
+// clinit.c
+if_cl_t *prepare_cl(void);
+void release_cl(if_cl_t *);
+#endif
+#endif
+//! OpenCL device workgroup size (intentionally defined outside ifdef)
+#define WG_SIZE 16
 
 #ifdef WITH_THREADS
 #ifndef __ASSEMBLER__
@@ -69,7 +90,7 @@ typedef long nint_t;
 #endif
 #endif
 
-#ifndef __ASSEMBLER__
+#if !defined(__ASSEMBLER__) && !defined(__OPENCL_VERSION__)
 // prototype for iterate()
 int iterate(nint_t real0, nint_t imag0);
 extern int maxiterate_;
