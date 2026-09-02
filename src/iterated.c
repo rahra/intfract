@@ -24,7 +24,7 @@
 
 
 #ifdef USE_DOUBLE
-/*! This function contains the iteration loop using integer arithmetics.
+/*! This function contains the iteration loop using floating point arithmetics.
  * @param real0 Real coordinate of pixel within the complex plane.
  * @param imag0 Imaginary coordinate of the pixel.
  * @return Returns the number of iterations to reach the break condition.
