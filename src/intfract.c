@@ -25,7 +25,7 @@
  * gcc -Wall -O2 -std=c99 `pkg-config --cflags --libs cairo` -o intfract intfract.c
  *
  * @author Bernhard R. Fischer, <bf@abenteuerland.at>
- * @date 2026/09/02
+ * @date 2026/09/03
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -68,47 +68,20 @@ int wg_size_ = WG_SIZE;
  */
 void mand_calc(int *image, nint_t realmin, nint_t imagmin, nint_t realmax, nint_t imagmax, int hres, int vres, int start, int skip)
 {
-  nint_t deltareal, deltaimag, real0,  imag0;
-  int x, y;
+   nint_t real0[hres],  imag0[vres];
+   int x, y;
 
-  deltareal = realmax - realmin;
-  deltaimag = imagmax - imagmin;
+   // calculate coordinates in fractal space along real axis for each pixel column
+   for (x = start; x < hres; x += skip)
+      real0[x] = realmin + (realmax - realmin) / hres * x;
+   // calculate coordinates in fractal space along imaginary axis for each pixel row
+   for (y = 0; y < vres; y++)
+      imag0[y] = imagmin + (imagmax - imagmin) / vres * y;
 
-#ifdef USE_DOUBLE
-  // With datatype double we can minimize operations by incrementing real0 and
-  // image0 by a fraction of the pixelresolution.
-  deltareal /= hres;
-  deltaimag /= vres;
-
-  real0 = realmin + deltareal * start;
-  for (x = start; x < hres; x += skip)
-  {
-    imag0 = imagmax;
-    for (y = 0; y < vres; y++)
-    {
-      *(image + x + hres * (vres - y - 1)) = iterate(real0, imag0);
-      imag0 -= deltaimag;
-    }
-    real0 += deltareal * skip;
-  }
-#else
-  // Fractional inrementation does not work well with integers because of the
-  // resolution of the delta being too low. Thus, the outer loop has slightly
-  // more operations in the integer variant than in the double variant.
-  int col;
-  for (x = start; x < hres; x += skip)
-  {
-    real0 = realmin + deltareal * x / hres;
-    for (y = 0; y < vres;)
-    {
-      imag0 = imagmax - deltaimag * y / vres;
-      col = iterate(real0, imag0);
-      // fill all pixels which are below int resolution with the same iteration value
-      for (int _y = 0; y < vres && deltaimag * _y < vres; _y++, y++)
-         *(image + x + hres * (vres - y - 1)) = col;
-    }
-  }
-#endif
+   // calculate inner loop (iterate()) for each pixel
+   for (x = start; x < hres; x += skip)
+      for (y = 0; y < vres; y++)
+         *(image + x + hres * (vres - y - 1)) = iterate(real0[x], imag0[y]);
 }
 #endif
 
