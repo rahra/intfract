@@ -52,11 +52,11 @@ iterate:
    .align 16
 .Litloop:
 
-   sar   $(NORM_BITS/2),%r8   // real >>= NOR_BITS/2
+   sar   $(NORM_BITS/2),%r8   // real >>= NORM_BITS/2
    mov   %r8,%r10
    imul  %r10,%r10            // realq = real * real
 
-   sar   $(NORM_BITS/2),%r9   // imag >>= NOR_BITS/2
+   sar   $(NORM_BITS/2),%r9   // imag >>= NORM_BITS/2
    mov   %r9,%r11
    imul  %r11,%r11            // imagq = imag * imag
 
@@ -71,7 +71,7 @@ iterate:
    sub   %r11,%r10            // %r10 = realq - imagq
    lea   (%rdi,%r10),%r8      // real = real0 + %r10
 
-   dec   %ecx
+   dec   %ecx                 // i--
    jne   .Litloop
 
 .Litbrk:
