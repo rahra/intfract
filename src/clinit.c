@@ -87,7 +87,7 @@ cl_program init_cl_program(cl_context ctx, cl_device_id dev, const char *clsrc)
    
    free(buf);
 
-   if (clBuildProgram(program, 0, NULL, NULL, NULL, NULL) != CL_SUCCESS)
+   if (clBuildProgram(program, 0, NULL, "-I .", NULL, NULL) != CL_SUCCESS)
    {
       size_t log_size;
 
