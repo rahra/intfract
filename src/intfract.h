@@ -19,7 +19,7 @@
  * This file contains some definitions.
  *
  * @author Bernhard R. Fischer, <bf@abenteuerland.at>
- * @date 2026/09/01
+ * @date 2026/09/11
  */
 
 #include "config.h"
@@ -65,15 +65,22 @@ void release_cl(if_cl_t *);
 
 #ifdef USE_DOUBLE
 #ifndef __ASSEMBLER__
-typedef double nint_t;
+#ifndef FLOAT_TYPE
+#define FLOAT_TYPE double
+#endif
+typedef FLOAT_TYPE nint_t;
 #endif
 #define NORM_FACT 1L
+#undef NORM_BITS
 #define NORM_BITS 0
 #else
 #ifdef __ASSEMBLER__
 #define NORM_FACT (1 << NORM_BITS)
 #else
-typedef long nint_t;
+#ifndef INT_TYPE
+#define INT_TYPE long
+#endif
+typedef INT_TYPE nint_t;
 #define NORM_FACT ((nint_t)1 << NORM_BITS)
 #endif
 /*! The max number of bits b be depends on the machines word size n. This code
@@ -92,7 +99,13 @@ typedef long nint_t;
 
 #if !defined(__ASSEMBLER__) && !defined(__OPENCL_VERSION__)
 // prototype for iterate()
+#ifndef ASM_ITERATE
 int iterate(nint_t real0, nint_t imag0);
+#else
+// The assembler version of iterate is written with 64 bit registers so the
+// paramters must be passed with 64 bit with.
+int iterate(long real0, long imag0);
+#endif
 extern int maxiterate_;
 #endif
 

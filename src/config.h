@@ -19,7 +19,7 @@
  * This file contains basic config macros.
  *
  * \author Bernhard R. Fischer, <bf@abenteuerland.at>
- * \date 2026/09/02
+ * \date 2026/09/11
  */
 
 //! Define to compile with thread support.
@@ -30,6 +30,25 @@
 
 //! Define to use double (floating point operations), otherwise integer arithmetics is used.
 //#define USE_DOUBLE
+
+//! Type to be used in the floating point variant (i.e. USE_DOUBLE is defined).
+// The default type (if not defined) is double. This may define as float,
+//double, or long double.
+//#define FLOAT_TYPE float
+
+//! Type to be used in the integer varian (i.e. USE_DOUBLE is not defined). The
+// default type is long (if not defined). This may be defined as int or long.
+// Please not that you should adjust NORM_BITS below as well.
+//#define INT_TYPE int
+
+//! Number of bits to be used for normalization for the integer variant.
+// Basically a higher number gives a higher resolution if it is too high, the
+// calculations might overflow giving incorrect results. And obiously, the
+// number of bits must be less than the size of the type.
+// The default value for long (64 bit wide) is 50 and a suitable value for int
+// (32 bit wide) is 18.
+// NORM_BITS must be an even number.
+//#define NORM_BITS 18
 
 //! Define to use OpenCL (GPU support)
 //#define USE_OPENCL

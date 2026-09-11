@@ -289,7 +289,7 @@ void usage(const char *s)
          "    -x <width> ....... Choose image width (default = %d).\n"
          "    -y <height> ...... Choose image height (default = %d).\n"
          , s, num_colsets(), MAXITERATE, nthreads_, WG_SIZE, WIDTH, HEIGHT);
-   printf("\n    defs: sizeof(nint_t) = %ld, NORM_BITS = %d, NORM_FACT = %ld\n", sizeof(nint_t), NORM_BITS, NORM_FACT);
+   printf("\n    defs: sizeof(nint_t) = %ld, NORM_BITS = %d, NORM_FACT = %d\n", sizeof(nint_t), NORM_BITS, (int) NORM_FACT);
 #ifdef USE_OPENCL
    printf("    USE_OPENCL is defined\n");
 #endif
