@@ -25,7 +25,7 @@
  * gcc -Wall -O2 -std=c99 `pkg-config --cflags --libs cairo` -o intfract intfract.c
  *
  * @author Bernhard R. Fischer, <bf@abenteuerland.at>
- * @date 2026/09/03
+ * @date 2026/09/11
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -275,7 +275,7 @@ void cairo_save_image(const int *image, int hres, int vres, const char *s)
 
 void usage(const char *s)
 {
-   printf("intfract v3.0 © 2015-2025 Bernhard R. Fischer, <bf@abenteuerland.at>\n"
+   printf("intfract v4.0 © 2015-2026 Bernhard R. Fischer, <bf@abenteuerland.at>\n"
          "usage: %s [options] [realmin(x0)] [imagmin(y0)] [realmax(x1)] [imagmax(y1)]\n"
          "    -b <color> ....... Set background color in HTML format (#aarrggbb). Default = #000000\n"
          "    -C ............... Coordinates are given as x/y and w/h instead of x0/y0 and x1/y1.\n"
@@ -289,7 +289,7 @@ void usage(const char *s)
          "    -x <width> ....... Choose image width (default = %d).\n"
          "    -y <height> ...... Choose image height (default = %d).\n"
          , s, num_colsets(), MAXITERATE, nthreads_, WG_SIZE, WIDTH, HEIGHT);
-   printf("\n    defs: sizeof(nint_t) = %ld, NORM_BITS = %d, NORM_FACT = %d\n", sizeof(nint_t), NORM_BITS, (int) NORM_FACT);
+   printf("\n    defs: sizeof(nint_t) = %ld, NORM_BITS = %d, NORM_FACT = %ld\n", sizeof(nint_t), NORM_BITS, (long) NORM_FACT);
 #ifdef USE_OPENCL
    printf("    USE_OPENCL is defined\n");
 #endif
