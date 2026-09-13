@@ -89,7 +89,7 @@ typedef INT_TYPE nint_t;
  */
 #ifndef NORM_BITS
 //! Number of bits to normalize values. This must be an even number!
-#define NORM_BITS 50
+#define NORM_BITS 58
 #endif
 // safety check for NORM_BITS
 #if NORM_BITS & 1
