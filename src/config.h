@@ -45,10 +45,10 @@
 // Basically a higher number gives a higher resolution if it is too high, the
 // calculations might overflow giving incorrect results. And obiously, the
 // number of bits must be less than the size of the type.
-// The default value for long (64 bit wide) is 50 and a suitable value for int
-// (32 bit wide) is 18.
+// The default value for long (64 bit wide) is 58 and a suitable value for int
+// (32 bit wide) is 28.
 // NORM_BITS must be an even number.
-//#define NORM_BITS 18
+//#define NORM_BITS 28
 
 //! Define to use OpenCL (GPU support)
 //#define USE_OPENCL
