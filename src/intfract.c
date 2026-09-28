@@ -362,7 +362,7 @@ int main(int argc, char **argv)
          case 'n':
 #ifdef WITH_THREADS
             int nthreads = atoi(optarg);
-            if (nthreads >= 1 || nthreads_ <= MAX_THREADS)
+            if (nthreads >= 1 && nthreads_ <= MAX_THREADS)
                nthreads_ = nthreads;
 #else
             fprintf(stderr, "thread support not compiled\n");
