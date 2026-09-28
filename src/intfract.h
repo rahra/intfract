@@ -19,7 +19,7 @@
  * This file contains some definitions.
  *
  * @author Bernhard R. Fischer, <bf@abenteuerland.at>
- * @date 2026/09/11
+ * @date 2026/09/28
  */
 
 #include "config.h"
@@ -49,8 +49,12 @@ void release_cl(if_cl_t *);
 #ifndef __ASSEMBLER__
 #include <pthread.h>
 #endif
-#define MAX_THREADS 32
+#define MAX_THREADS 128
+#ifdef FORCE_NUM_THREADS
+#define NUM_THREADS FORCE_NUM_THREADS
+#else
 #define NUM_THREADS 4
+#endif
 #else
 #define NUM_THREADS 1
 #endif

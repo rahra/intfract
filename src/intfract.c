@@ -25,7 +25,7 @@
  * gcc -Wall -O2 -std=c99 `pkg-config --cflags --libs cairo` -o intfract intfract.c
  *
  * @author Bernhard R. Fischer, <bf@abenteuerland.at>
- * @date 2026/09/11
+ * @date 2026/09/28
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -323,9 +323,11 @@ int main(int argc, char **argv)
    pthread_t fdt[MAX_THREADS];
    int i;
 
+#ifndef FORCE_NUM_THREADS
    nthreads_ = get_ncpu();
    if (nthreads_ <= 0)
       nthreads_ = NUM_THREADS;
+#endif
 #endif
    while ((n = getopt(argc, argv, "b:Cc:hIi:n:o:w:x:y:")) != -1)
       switch (n)

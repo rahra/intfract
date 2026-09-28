@@ -19,11 +19,15 @@
  * This file contains basic config macros.
  *
  * \author Bernhard R. Fischer, <bf@abenteuerland.at>
- * \date 2026/09/11
+ * \date 2026/09/28
  */
 
 //! Define to compile with thread support.
 #define WITH_THREADS
+
+//! This allows to define the number of threads used at compile time. It will
+// bypass the CPU check. Option -n may still override it.
+//#define FORCE_NUM_THREADS 16
 
 //! Define to compile with assembler iterate() function.
 #define ASM_ITERATE
