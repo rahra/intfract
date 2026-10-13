@@ -380,9 +380,9 @@ And instead of writing the code three times for all three of these GPU types I u
 
 Because OpenCL works as a universal standard, it may create some additional programming overhead. But IMO it is worth tolerating some overhead in most cases and going with a standard than using some proprietary stuff.
 
-The next big difference is the method of parallelization which means how to total workload is partitioned.
+The next big difference is the method of parallelization which means how the total workload is partitioned.
 
-With multi-threading everything still runs on the very same CPU as if it would without multi-threading. So with Intfract I run two nested loops, the outer one for the x-axis (columns, real part) and the inner one for the y-axis (rows, imaginary part) of the image.
+With multi-threading everything still runs on the very same CPU as it would without multi-threading. So with Intfract I run two nested loops, the outer one for the x-axis (columns, real part) and the inner one for the y-axis (rows, imaginary part) of the image.
 
 ```C
  // in function mand_calc():
@@ -392,19 +392,19 @@ With multi-threading everything still runs on the very same CPU as if it would w
       *(image + x + hres * (vres - y - 1)) = iterate(real0[x], imag0[y]);
 ```
 
-Note that for each pixel there is another loop inside these to x and y loops, which is the innermost (the third) loop. It is found in the `iterate()` functions in the source files `iteratel.c`, `iterated.c`, `iterate.S`, and now additionally `iterate.cl`. And these three nested loops are the reason why calculating fractal images can be so time-consuming.
+Note that for each pixel there is another loop inside these two x and y loops, which is the innermost (the third) loop. It is found in the `iterate()` functions in the source files `iteratel.c`, `iterated.c`, `iterate.S`, and now additionally `iterate.cl`. And these three nested loops are the reason why calculating fractal images can be so time-consuming.
 
-In the multi-threaded version, each thread executes this same piece of code. And to make sure that each pixel is calculated only once at all and not multiple times I split the workload programatically by setting the start value of the column counter to unique number according to the thread id and then increasing the counter by the total thread count (see code snippet above).
+In the multi-threaded version, each thread executes this same piece of code. And to make sure that each pixel is calculated only once at all and not multiple times I split the workload programatically by setting the start value of the column counter to a unique number according to the thread id and then increasing the counter by the total thread count (see code snippet above).
 
-This evenly divides the number of pixel by the number of threads, i.e. each thread calculates the same amount of pixels. This is a very simple approach and it completely avoids any synchronization between threads which would consume time as well.
+This evenly divides the number of pixels by the number of threads, i.e. each thread calculates the same amount of pixels. This is a very simple approach and it completely avoids any synchronization between threads which would consume time as well.
 
-But technically this is not perfect since although it evenly distributes the number of pixels across threads, it does not evenly distribute the total computation time because the pixels are not all equally hard to calculate. But other methods would probably require thread synchronization which may slow down the overall time again. However, this a topic for future research an probably I come back to this problem at some time.
+But technically this is not perfect since although it evenly distributes the number of pixels across threads, it does not evenly distribute the total computation time because the pixels are not all equally hard to calculate. But other methods would probably require thread synchronization which may slow down the overall time again. However, this is a topic for future research and probably I come back to this problem at some time.
 
-So let's get back to GPUs and OpenCL. As said at the beginning of this whole chapter, the smallest work package is one pixel. Different to multi-threading we do not have to wrap the pixel calculation (`iterate()`) into loops (x/real and y/imaginary) ourselves but leave this to OpenCL and GPU respectively.
+So let's get back to GPUs and OpenCL. As I said at the beginning of this whole chapter, the smallest work package is one pixel. Different to multi-threading we do not have to wrap the pixel calculation (`iterate()`) into loops (x/real and y/imaginary) ourselves but leave this to OpenCL and the GPU respectively.
 
-So we write the work package and then tell the GPU trough OpenCL how often it should be called and with which function parameters. The GPU then runs this function in parallel, as much as possible (or as defined) and as often as necessary.
+So we write the work package and then tell the GPU trough OpenCL how often it should be called and with which function parameters. The GPU then runs this function in parallel, as much as possible (or as defined) at the same time (depending on actual physical cores) and as often as necessary.
 
-The following code shows the inner loop written in CL for the GPU (code slightly simplified for better readability, full version found in `iterate.cl`):
+The following code shows the inner loop (`iterate()`) written in CL for the GPU (code slightly simplified for better readability, full version found in `iterate.cl`):
 
 ```c
 __kernel void iterate(__global nint_t const *real0, __global nint_t const *imag0, int maxiterate, __global int *result)
@@ -438,27 +438,27 @@ If we compare this code to the CPU version (see Section *Appication*), we will s
 
 The major difference is actually the handling of the function arguments and the return value.
 
-In the CPU variant – with or without threads – `iterate()` is called as often as there are pixels in the image. The function arguments `real0` and `imag0` will we be different for each call as they represent the coordinates within complex plane. It will return the number of iterations. Hence, the calling function (`mand_calc()`) must keep track for which pixel `iterate()` was called to store the return value at the appropriate position.
+In the CPU variant – with or without threads – `iterate()` is called as often as there are pixels in the image. The function arguments `real0` and `imag0` will we be different for each call as they represent the coordinates within the complex plane. It will return the number of iterations. Hence, the calling function (`mand_calc()`) must keep track for which pixel `iterate()` was called to store the return value at the appropriate position.
 
-In the GPU variant, of course, `iterate()` is called as often as there are pixels as well but always with the same function arguments and it does not return a value. So in contrast to the CPU version, `iterate()` itself has to determine for which pixel it was called and store the result appropriately.
+In the GPU variant, of course, `iterate()` is called as often as there are pixels as well but always with the same function arguments and it does *not* return a value. So in contrast to the CPU version, `iterate()` itself has to determine for which pixel it was called and has to store the result appropriately.
 
 The reason for this is that the mechanism for parallelizing the work packages is generically done within the GPU and not in a specialized loop construct as within the CPU variant's `mand_calc()`.
 
 So to enable the work package to self-determine its "location" within the process of parallel execution, OpenCL provides several functions.
-To get the current pixel position, the function `get_global_id(d)` is called where `d` is the dimension and `get_global_size(d)` returns the total number of indexes within each dimension. 0 is the x coordinate und 1 is the y coordinate in this case.
+To get the current pixel position, the function `get_global_id(d)` is called where `d` is the dimension and `get_global_size(d)` returns the total number of indexes within each dimension. 0 is the x coordinate and 1 is the y coordinate in this case.
 
 And because `iterate()` is always executed with the very same function arguments, we pass a pointer to all pre-calculated complex numbers for each value of x and y and let `iterate()` itself choose the appropriate values dependent on its actual x and y, which in turn is determined by `get_global_id()`.
 
 Sounds like pointer voodoo? So let's make it more specific. Assume that we are about to calculate a fractal image with the resolution of 1920x1088. Why not 1080? – I explain later.
-So the x axis has 1920 different real numbers with the indexes 0 to 1919 and on the y axis there are 1088 different imaginary numbers with indexes 0 to 1087. We pre-caclulate them before the actual image calculation – the execution of `iterate()`.
+So the x axis has 1920 different real numbers with the indexes 0 to 1919 and on the y axis there are 1088 different imaginary numbers with indexes 0 to 1087. We pre-calculate them before the actual image calculation.
 
-And since this is done in a loop along each axis, we can even do this in parallel on the GPU. This is done by `fract_coords()` in `iterate.cl` (code snippet is below). Remember that left lower corner is reflected by the complex number (realmin + i imagmin) and the right upper corner by (realmax + i imagmax). So to calculate the real values for each x coordinate of an image with the pixel resolution w x h we do the following:
+And since this is done in a loop along each axis, we can even do this in parallel on the GPU. This is done by `fract_coords()` in `iterate.cl` (code snippet is below). Remember that the left upper corner is reflected by the complex number (realmin + i imagmin) and the right lower corner by (realmax + i imagmax). So to calculate the real values for each x coordinate of an image with the pixel resolution w x h we do the following:
 
 ```
 real = realmin + (realmax - realmin) * x / w
 ```
 
-In our example we w = 1920, so there are 1920 different real values. We create a memory buffer for 1920 real entries (an array) within the GPU memory with `clCreateBuffer()` (the OpenCL/GPU version of `malloc()`) in the OpenCL variant of `mand_calc()`. And then we execute `fract_coords()` and pass three arguments (with `clSetKernelArg()`): realmin, realdiff (= realmax - realmin), and a pointer to the memory buffer.
+In our example w = 1920, so there are 1920 different real values. We create a memory buffer for 1920 real entries (an array) within the GPU memory with `clCreateBuffer()` (the OpenCL/GPU version of `malloc()`) in the OpenCL variant of `mand_calc()`. And then we execute `fract_coords()` and pass three arguments (with `clSetKernelArg()`): realmin, realdiff (= realmax - realmin), and a pointer to the memory buffer.
 
 With the call to execute (`clEnqueueNDRangeKernel()`) we tell the GPU for how many dimensions and how often it shall be executed for each dimension, which is 1 dimension with 1920 (`global_size`) values.
 
@@ -470,15 +470,15 @@ __kernel void fract_coords(nint_t c0, nint_t dc, __global nint_t *c)
 }
 ```
  
-`fract_coords()` determines its current index `i` with `get_global_id(0)` which is a number between 0 and 1919, then calculates the formula, where `get_global_size(0)` always returns 1920, and finaly stores the result into the the memory buffer `c` at index `i`.
+`fract_coords()` determines its current index `i` with `get_global_id(0)` which is a number between 0 and 1919, then calculates the formula, where `get_global_size(0)` always returns 1920, and finally stores the result into the the memory buffer `c` at index `i`.
 
-Once it is finished calculating all 1920 real numbers the function is executed again in the same way for all 1088 imaginary numbers. We end up with two memory buffers, one with all 1920 real numbers and one with all 1088 imaginary numbers which together form all 1920x1088 complex numbers within complex plane for our fractal image.
+Once it is finished calculating all 1920 real numbers, the function is executed again in the same way for all 1088 imaginary numbers. We end up with two memory buffers, one with all 1920 real numbers and one with all 1088 imaginary numbers which together form all 1920x1088 complex numbers within the complex plane for our fractal image.
 
-With his we can now calculate the image and execute `iterate()`, similar to what we did with `fract_coords()`. `iterate()` takes four arguments: the pointer to the real numbers (calculated just before), the pointer to the imaginary numbers, the maximum number of iterations (`maxiterate_`),[^5] and a pointer to the result buffer. This holds and integer number for each pixel, so it is buffer of 1920x1088 integers, organized in memory as one row after each other.
+With his we can now calculate the image and execute `iterate()`, similar to what we did with `fract_coords()`. `iterate()` takes four arguments: the pointer to the real numbers (calculated just before), the pointer to the imaginary numbers, the maximum number of iterations (`maxiterate_`),[^5] and a pointer to the result buffer. This holds an integer number for each pixel, so it is buffer of 1920x1088 integers, organized in memory as one row after each other.
 
-Now we can look back at the OpenCL code of `iterate()` above and should actually be able to understand what happens. First, we determine the current pixel position with `get_global_id()` for each dimension. Then we retrieve the real and imaginary values for the respective position from our real and imaginary numbers array. Then we execute the iteration loop exactly as in the CPU variant.
+Now we can look back at the OpenCL code of `iterate()` above and should actually be able to understand what happens. First, we determine the current pixel position with `get_global_id()` for each dimension. Then we retrieve the real and imaginary values for the respective position from our real and imaginary number arrays. Then we execute the iteration loop exactly as in the CPU variant.
 
-Finally, the resulting iteration count `i` is stored into the result buffer at the appropriate index. The index calculation may look complicated but you can think of it as `result[x][y] = i`. But memory always is 1-dimensional, hence, multi-dimensional arrays have to be flattened in some way and that's exactly what happens here. Shall I really elaborate on this a little bit more? – I decided to not do so.
+Finally, the resulting iteration count `i` is stored into the result buffer at the appropriate index. The index calculation may look complicated but you can think of it as `result[x][y] = i`. But memory always is 1-dimensional, hence, multi-dimensional arrays have to be flattened in some way and that's exactly what happens here. Shall I really elaborate on this a little bit more? – I decided not to do so.
 
 After `iterate()` was executed for each pixel (which is 2,088,960 times for our 1920x1088 image), we can transfer the result buffer from the VRAM to the main memory (with `clEnqueueReadBuffer()` in `mand_calc()`) and can finally paint our image as usual and – voilà!
 
@@ -490,7 +490,7 @@ So what is the final result? It is fast!
 
 However, you might already guess that the answer is more complex. Regular (not high-end) GPUs, such as the Nvidia Geforce and the AMD Radeon cards, have 32-bit cores and are optimized for that. This gives very interesting results.
 
-But this is a story for another article. I'am working on it ;)
+But this is a story for another article. I'm working on it ;)
 
 
 [^1]: The Intel i286 had 16 bit registers, the i386 up to the Pentium
