@@ -1,5 +1,7 @@
 # Calculating Fractals With Integer Operations
 
+**UPDATE 2026:** Read new Section *Parallel Computing* below!
+
 This program demonstrates how to use integers instead of floating point
 operations using the example of fractal images.
 
